@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4338ca;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fd;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .status.pending { background-color: #fef3c7; color: #92400e; }
+        .status.in-progress { background-color: #dbeafe; color: #1e40af; }
+        .status.resolved { background-color: #dcfce7; color: #166534; }
+        .details {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Complaint Status Update</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user.username }},</p>
+            
+            <p>The status of your complaint has been updated:</p>
+            
+            <div class="details">
+                <h3>{{ complaint_title }}</h3>
+                <p><strong>Type:</strong> {{ complaint_type }}</p>
+                <p><strong>Status Update:</strong><br>
+                    From: <span class="status {{ old_status|lower }}">{{ old_status }}</span><br>
+                    To: <span class="status {{ new_status|lower }}">{{ new_status }}</span>
+                </p>
+                <p><strong>Description:</strong><br>
+                {{ description }}</p>
+                <p><strong>Submitted:</strong> {{ created_at|date:"F j, Y, g:i a" }}</p>
+                <p><strong>Last Updated:</strong> {{ updated_at|date:"F j, Y, g:i a" }}</p>
+            </div>
+            
+            <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
+            
+            <p>Best regards,<br>
+            Smart City Management Team</p>
+        </div>
+    </div>
+</body>
+</html> 

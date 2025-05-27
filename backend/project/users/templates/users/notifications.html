@@ -1,0 +1,344 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Notifications - Smart City{% endblock %}
+
+{% block content %}
+<style>
+    .notifications-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .notification-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .notification-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notification-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .notification-unread {
+        border-left: 4px solid var(--purple-600);
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-complaint {
+        background-color: #fde2e2;
+        color: #ef4444;
+    }
+
+    .badge-traffic {
+        background-color: #feedde;
+        color: #f97316;
+    }
+
+    .badge-air-quality {
+        background-color: #e0f2fe;
+        color: #0ea5e9;
+    }
+
+    .badge-water-supply {
+        background-color: #dbeafe;
+        color: #3b82f6;
+    }
+
+    .badge-event {
+        background-color: #f3e8ff;
+        color: #a855f7;
+    }
+
+    .badge-other {
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+
+    .notification-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        padding-right: 5rem;
+        color: var(--foreground);
+    }
+
+    .notification-message {
+        margin-bottom: 0.5rem;
+        color: var(--secondary-foreground);
+    }
+
+    .notification-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+    }
+
+    .notification-time {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .notification-location {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background 0.2s ease;
+    }
+
+    .btn-mark-read {
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+    }
+
+    .btn-mark-read:hover {
+        background: var(--muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: var(--card);
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--muted);
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--foreground);
+    }
+
+    .notification-filters {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--purple-600);
+        color: white;
+    }
+</style>
+
+<div class="notifications-container">
+    <div class="notification-header">
+        <h1 class="card-title">Notifications</h1>
+        <div>
+            <button id="mark-all-read" class="btn btn-secondary">
+                <i class="ri-check-double-line"></i>
+                Mark all as read
+            </button>
+        </div>
+    </div>
+
+    <div class="notification-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="COMPLAINT">Complaints</button>
+        <button class="filter-btn" data-filter="TRAFFIC">Traffic</button>
+        <button class="filter-btn" data-filter="AIR_QUALITY">Air Quality</button>
+        <button class="filter-btn" data-filter="WATER_SUPPLY">Water Supply</button>
+        <button class="filter-btn" data-filter="EVENT">Events</button>
+        <button class="filter-btn" data-filter="unread">Unread</button>
+    </div>
+
+    <div class="notification-list">
+        {% if notifications %}
+            {% for notification in notifications %}
+                <div class="notification-card {% if not notification.is_read %}notification-unread{% endif %}" data-type="{{ notification.notification_type }}">
+                    <span class="notification-badge badge-{{ notification.notification_type|lower }}">
+                        {{ notification.get_notification_type_display }}
+                    </span>
+                    <h3 class="notification-title">{{ notification.title }}</h3>
+                    <p class="notification-message">{{ notification.message }}</p>
+                    <div class="notification-meta">
+                        <div class="notification-time">
+                            <i class="ri-time-line"></i>
+                            <span>{{ notification.created_at|date:"M d, Y" }} at {{ notification.created_at|time:"H:i" }}</span>
+                        </div>
+                        {% if notification.latitude and notification.longitude %}
+                        <div class="notification-location">
+                            <i class="ri-map-pin-line"></i>
+                            <span>{{ notification.latitude|floatformat:4 }}, {{ notification.longitude|floatformat:4 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if not notification.is_read %}
+                    <div class="notification-actions">
+                        <button class="btn-action btn-mark-read" data-id="{{ notification.id }}">Mark as read</button>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="ri-notification-line empty-icon"></i>
+                <h3 class="empty-title">No notifications yet</h3>
+                <p>You'll see notifications about city services and events here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter notifications
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const notifications = document.querySelectorAll('.notification-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show/hide notifications based on filter
+                notifications.forEach(notif => {
+                    if (filter === 'all') {
+                        notif.style.display = 'block';
+                    } else if (filter === 'unread') {
+                        if (notif.classList.contains('notification-unread')) {
+                            notif.style.display = 'block';
+                        } else {
+                            notif.style.display = 'none';
+                        }
+                    } else {
+                        if (notif.dataset.type === filter) {
+                            notif.style.display = 'block';
+                        } else {
+                            notif.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+
+        // Mark notification as read
+        const markReadButtons = document.querySelectorAll('.btn-mark-read');
+        markReadButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationId = this.dataset.id;
+                const notificationCard = this.closest('.notification-card');
+                
+                fetch(`/notifications/mark-read/${notificationId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        notificationCard.classList.remove('notification-unread');
+                        this.parentElement.remove();
+                    }
+                });
+            });
+        });
+
+        // Mark all as read
+        const markAllReadButton = document.getElementById('mark-all-read');
+        markAllReadButton.addEventListener('click', function() {
+            fetch('/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notification-unread').forEach(card => {
+                        card.classList.remove('notification-unread');
+                        const actionDiv = card.querySelector('.notification-actions');
+                        if (actionDiv) actionDiv.remove();
+                    });
+                }
+            });
+        });
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %} 

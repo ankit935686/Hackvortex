@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Notifications - Manager Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    .notification-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-family: var(--font-body);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background-color: white;
+    }
+    
+    .btn-submit {
+        background: var(--purple-600);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        background: var(--purple-700);
+        transform: translateY(-1px);
+    }
+    
+    .notifications-history {
+        margin-top: 2rem;
+    }
+    
+    .notification-item {
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: white;
+    }
+    
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+    }
+    
+    .notification-type {
+        background: var(--secondary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .notification-date {
+        font-size: 0.875rem;
+        color: var(--secondary-foreground);
+    }
+    
+    .no-notifications {
+        text-align: center;
+        padding: 2rem;
+        color: var(--secondary-foreground);
+    }
+</style>
+
+<div class="notification-container">
+    <h1 class="mb-4">Send Notifications to Citizens</h1>
+    
+    <div class="card">
+        <h2 class="card-title">Create New Notification</h2>
+        <form method="POST" action="{% url 'manager:send_notification' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="notification_type">Notification Type</label>
+                <select class="form-select" id="notification_type" name="notification_type" required>
+                    <option value="EVENT">Event</option>
+                    <option value="ALERT">Alert</option>
+                    <option value="TRAFFIC">Traffic</option>
+                    <option value="AIR_QUALITY">Air Quality</option>
+                    <option value="WATER_SUPPLY">Water Supply</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="title">Title</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Enter notification title" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="message">Message</label>
+                <textarea class="form-control" id="message" name="message" rows="4" placeholder="Enter notification message" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Notification Priority</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="priority" id="priority_normal" value="normal" checked>
+                    <label class="form-check-label" for="priority_normal">Normal</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="priority" id="priority_high" value="high">
+                    <label class="form-check-label" for="priority_high">High Priority</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">Send Notification to All Citizens</button>
+        </form>
+    </div>
+    
+    <div class="notifications-history">
+        <h2 class="card-title">Recently Sent Notifications</h2>
+        
+        {% if recent_notifications %}
+            {% for notification in recent_notifications %}
+                <div class="notification-item">
+                    <div class="notification-header">
+                        <div class="notification-title">{{ notification.title }}</div>
+                        <div class="notification-type">{{ notification.get_notification_type_display }}</div>
+                    </div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-date">Sent: {{ notification.created_at|date:"F j, Y, g:i a" }}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-notifications">
+                <p>No notifications have been sent yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

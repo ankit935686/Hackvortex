@@ -1,0 +1,324 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Alerts - Smart City{% endblock %}
+
+{% block content %}
+<style>
+    .alerts-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--foreground);
+    }
+    
+    .alerts-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .alert-card {
+        background: var(--card);
+        border-radius: 0.875rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+    }
+    
+    .alert-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .alert-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .alert-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+    
+    .alert-type {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .alert-type-ALERT {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .alert-type-EVENT {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .alert-type-TRAFFIC {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .alert-type-AIR_QUALITY {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .alert-type-WATER_SUPPLY {
+        background-color: rgba(14, 165, 233, 0.1);
+        color: #0ea5e9;
+        border: 1px solid rgba(14, 165, 233, 0.2);
+    }
+    
+    .alert-type-OTHER {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+    
+    .alert-body {
+        padding: 1.5rem;
+    }
+    
+    .alert-message {
+        color: var(--foreground);
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(0, 0, 0, 0.02);
+        font-size: 0.875rem;
+        color: var(--secondary-foreground);
+    }
+    
+    .alert-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .alert-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .alert-action {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        transition: background 0.3s ease;
+    }
+    
+    .alert-action:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .no-alerts {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--secondary-foreground);
+    }
+    
+    .no-alerts i {
+        font-size: 3rem;
+        color: var(--muted-foreground);
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .no-alerts p {
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .mark-all-read {
+        margin-bottom: 1rem;
+        text-align: right;
+    }
+    
+    .mark-all-btn {
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        transition: all 0.3s ease;
+    }
+    
+    .mark-all-btn:hover {
+        background: var(--muted);
+        color: var(--foreground);
+    }
+    
+    @media (min-width: 768px) {
+        .alerts-wrapper {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        }
+    }
+</style>
+
+<div class="alerts-container">
+    <h1 class="page-title">City Alerts &amp; Notifications</h1>
+    
+    {% if alerts %}
+        <div class="mark-all-read">
+            <button class="mark-all-btn" onclick="markAllAsRead()">
+                <i class="ri-check-double-line"></i>
+                Mark all as read
+            </button>
+        </div>
+        
+        <div class="alerts-wrapper">
+            {% for alert in alerts %}
+                <div class="alert-card {% if not alert.is_read %}unread{% endif %}" id="alert-{{ alert.id }}">
+                    <div class="alert-header">
+                        <h2 class="alert-title">{{ alert.title }}</h2>
+                        <span class="alert-type alert-type-{{ alert.notification_type }}">
+                            {{ alert.get_notification_type_display }}
+                        </span>
+                    </div>
+                    <div class="alert-body">
+                        <p class="alert-message">{{ alert.message }}</p>
+                    </div>
+                    <div class="alert-footer">
+                        <div class="alert-date">
+                            <i class="ri-time-line"></i>
+                            {{ alert.created_at|date:"F j, Y, g:i a" }}
+                        </div>
+                        <div class="alert-actions">
+                            {% if not alert.is_read %}
+                                <button class="alert-action" onclick="markAsRead({{ alert.id }})">
+                                    <i class="ri-check-line"></i>
+                                    Mark as read
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-alerts">
+            <i class="ri-notification-line"></i>
+            <p>You have no alerts at this time.</p>
+            <span>New alerts will appear here when available.</span>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function markAsRead(alertId) {
+        fetch(`/notifications/mark-read/${alertId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const alertElement = document.getElementById(`alert-${alertId}`);
+                alertElement.classList.remove('unread');
+                
+                // Hide the mark as read button
+                const actionButton = alertElement.querySelector('.alert-action');
+                if (actionButton) {
+                    actionButton.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+        });
+    }
+    
+    function markAllAsRead() {
+        fetch('/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide all mark as read buttons
+                document.querySelectorAll('.alert-action').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+                // Remove unread class from all alert cards
+                document.querySelectorAll('.alert-card.unread').forEach(card => {
+                    card.classList.remove('unread');
+                });
+                
+                // Update the notification counter in the header
+                const counter = document.querySelector('.notification-counter');
+                if (counter) {
+                    counter.textContent = '0';
+                    counter.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+        });
+    }
+    
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %} 

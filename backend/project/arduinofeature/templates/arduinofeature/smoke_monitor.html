@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    body {
+        font-family: var(--font-body);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+    }
+
+    .main-content {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        margin-top: var(--header-height);
+        padding: 2rem;
+    }
+
+    .monitor-container {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+        text-align: center;
+    }
+
+    .monitor-title {
+        color: var(--purple-600);
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        font-family: var(--font-heading);
+    }
+
+    .smoke-level {
+        font-size: 4rem;
+        font-weight: bold;
+        margin: 2rem 0;
+        color: var(--purple-600);
+        font-family: var(--font-heading);
+    }
+
+    .status {
+        font-size: 1.5rem;
+        padding: 1rem 2rem;
+        border-radius: var(--radius);
+        display: inline-block;
+        margin-bottom: 2rem;
+        font-family: var(--font-body);
+        transition: all 0.3s ease;
+    }
+
+    .status.safe {
+        background: rgba(46, 125, 50, 0.1);
+        color: #2e7d32;
+        border: 1px solid rgba(46, 125, 50, 0.2);
+    }
+
+    .status.warning {
+        background: rgba(239, 108, 0, 0.1);
+        color: #ef6c00;
+        border: 1px solid rgba(239, 108, 0, 0.2);
+    }
+
+    .status.danger {
+        background: rgba(198, 40, 40, 0.1);
+        color: #c62828;
+        border: 1px solid rgba(198, 40, 40, 0.2);
+    }
+
+    .last-update {
+        color: var(--secondary-foreground);
+        font-size: 0.9375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .loading-indicator {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--purple-600);
+        border-radius: 50%;
+        border-top-color: transparent;
+        display: none;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-indicator.active {
+        display: inline-block;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            padding: 1rem;
+        }
+
+        .smoke-level {
+            font-size: 3rem;
+        }
+
+        .status {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<div class="main-content">
+    <div class="monitor-container">
+        <h1 class="monitor-title">Live Smoke Level Monitor</h1>
+        <div class="smoke-level" id="smokeLevel">--</div>
+        <div class="status" id="status">Initializing...</div>
+        <div class="last-update">
+            <span id="lastUpdate">Last update: --</span>
+            <div class="loading-indicator" id="loadingIndicator"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const UPDATE_INTERVAL = 2000; // 2 seconds in milliseconds (changed from 10 seconds)
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    function updateSmokeData() {
+        loadingIndicator.classList.add('active'); // Show loading indicator
+
+        fetch('{% url "arduinofeature:get_smoke_data" %}')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received data:', data);  // Debug log
+                
+                // Update smoke level
+                const smokeLevelElement = document.getElementById('smokeLevel');
+                smokeLevelElement.textContent = data.smoke_level + ' PPM';
+                console.log('Updated smoke level:', data.smoke_level);  // Debug log
+                
+                // Update status
+                const statusElement = document.getElementById('status');
+                statusElement.textContent = data.status;
+                statusElement.className = 'status ' + data.status.toLowerCase();
+                console.log('Updated status:', data.status);  // Debug log
+                
+                // Update timestamp
+                const lastUpdateElement = document.getElementById('lastUpdate');
+                lastUpdateElement.textContent = `Last update: ${data.timestamp}`;
+                console.log('Updated timestamp:', data.timestamp);  // Debug log
+                
+                // Store last update time and timestamp for countdown
+                lastUpdateTime = new Date().getTime();
+                lastTimestamp = data.timestamp;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            })
+            .finally(() => {
+                loadingIndicator.classList.remove('active'); // Hide loading indicator
+            });
+    }
+
+    // Update immediately and then every 2 seconds
+    updateSmokeData();
+    setInterval(updateSmokeData, UPDATE_INTERVAL);
+
+    // Add countdown display
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const nextUpdate = Math.ceil((lastUpdateTime + UPDATE_INTERVAL - now) / 1000);
+        if (nextUpdate > 0) {
+            document.getElementById('lastUpdate').textContent = 
+                `Last update: ${lastTimestamp} (Next update in ${nextUpdate}s)`;
+        }
+    }
+
+    let lastUpdateTime = new Date().getTime();
+    let lastTimestamp = '--';
+
+    // Update the countdown every second
+    setInterval(() => {
+        updateCountdown();
+    }, 1000);
+</script>
+{% endblock %} 

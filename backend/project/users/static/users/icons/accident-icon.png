@@ -1,0 +1,11 @@
+# Create these directories:
+project/
+  users/
+    static/
+      users/
+        icons/
+          accident-icon.png
+          breakdown-icon.png
+          hazard-icon.png
+          construction-icon.png
+          default-icon.png 

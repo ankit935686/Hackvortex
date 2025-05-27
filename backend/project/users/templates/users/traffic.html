@@ -1,0 +1,741 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Traffic Monitor - Smart City{% endblock %}
+
+{% block content %}
+<style>
+    .traffic-container {
+        width: 100%;
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    /* Bento grid item positions */
+    .bento-item-1 { grid-column: span 2; grid-row: span 2; } /* Map Card */
+    .bento-item-2 { grid-column: span 2; } /* Route Planner */
+    .bento-item-3 { grid-column: span 2; grid-row: span 2; } /* Live Routes */
+
+    .traffic-card {
+        background: var(--card);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+        height: 100%;
+        width: 100%;
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .traffic-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.03);
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+        font-family: var(--font-heading);
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--purple-500);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        opacity: 0.9;
+    }
+
+    #map {
+        height: 600px;
+        width: 100%;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .control-buttons {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .control-btn {
+        padding: 0.75rem 1.25rem;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 0.75rem;
+        background: rgba(139, 92, 246, 0.05);
+        color: var(--purple-500);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+        background: rgba(139, 92, 246, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    }
+
+    .control-btn.active {
+        background: var(--purple-500);
+        color: white;
+        border-color: var(--purple-500);
+    }
+
+    .route-option {
+        padding: 1.25rem;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        background: rgba(139, 92, 246, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .route-option:hover {
+        transform: translateY(-2px);
+        background: rgba(139, 92, 246, 0.08);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    .congestion-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        gap: 0.5rem;
+    }
+
+    .congestion-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .low { 
+        background: rgba(16, 185, 129, 0.1);
+        color: #065f46;
+    }
+    .low::before { background: #10b981; }
+
+    .moderate { 
+        background: rgba(245, 158, 11, 0.1);
+        color: #92400e;
+    }
+    .moderate::before { background: #f59e0b; }
+
+    .high { 
+        background: rgba(239, 68, 68, 0.1);
+        color: #991b1b;
+    }
+    .high::before { background: #ef4444; }
+
+    .route-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 0.75rem;
+        background: rgba(139, 92, 246, 0.05);
+        color: var(--foreground);
+        transition: all 0.3s ease;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .route-details {
+        margin-top: 0.75rem;
+        color: var(--secondary-foreground);
+        font-size: 0.875rem;
+    }
+
+    .warning {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 0.5rem;
+    }
+
+    @media (max-width: 1400px) {
+        .bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .bento-item-1 { grid-column: span 2; }
+        .bento-item-2, .bento-item-3 { grid-column: span 1; }
+    }
+
+    @media (max-width: 768px) {
+        .traffic-container {
+            padding: 1rem;
+        }
+
+        .bento-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .bento-item-1, .bento-item-2, .bento-item-3 {
+            grid-column: span 1;
+        }
+
+        #map {
+            height: 400px;
+        }
+
+        .route-inputs {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    [data-theme="dark"] {
+        --chart-grid: rgba(139, 92, 246, 0.1);
+        --chart-text: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-theme="dark"] .traffic-card {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .traffic-card:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .card-title {
+        color: rgba(139, 92, 246, 0.9);
+    }
+
+    [data-theme="dark"] .control-btn {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+        color: rgba(139, 92, 246, 0.9);
+    }
+
+    [data-theme="dark"] .control-btn:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .control-btn.active {
+        background: rgba(139, 92, 246, 0.8);
+        color: white;
+        border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    [data-theme="dark"] .route-option {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .route-option:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .input-group input {
+        background: rgba(139, 92, 246, 0.05);
+        border-color: rgba(139, 92, 246, 0.2);
+        color: var(--foreground);
+    }
+
+    [data-theme="dark"] .input-group input:focus {
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    [data-theme="dark"] .route-details {
+        color: var(--secondary-foreground);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        margin: 15% auto;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .control-btn.secondary {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .issue-marker {
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .issue-marker.ACCIDENT { background: #fee2e2; color: #dc2626; }
+    .issue-marker.BREAKDOWN { background: #fef3c7; color: #d97706; }
+    .issue-marker.HAZARD { background: #dbeafe; color: #2563eb; }
+    .issue-marker.CONSTRUCTION { background: #f3e8ff; color: #7c3aed; }
+</style>
+
+<div class="traffic-container">
+    <div class="bento-grid">
+        <!-- Map Section -->
+        <div class="traffic-card bento-item-1">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="ri-map-2-line"></i>
+                    Traffic Map
+                </h3>
+            </div>
+            <div class="control-buttons">
+                <button class="control-btn" onclick="toggleTraffic()">
+                    <i class="ri-traffic-line"></i> Traffic
+                </button>
+                <button class="control-btn" onclick="findMyLocation()">
+                    <i class="ri-map-pin-line"></i> My Location
+                </button>
+            <button class="control-btn" onclick="openReportModal()">
+                <i class="ri-error-warning-line"></i> Report Issue
+            </button>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <!-- Route Planner Section -->
+        <div class="traffic-card bento-item-2">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="ri-route-line"></i>
+                    Route Planner
+                </h3>
+            </div>
+            <div class="route-inputs">
+                <div class="input-group">
+                    <input type="text" id="origin-input" placeholder="Your Location" />
+                </div>
+                <div class="input-group">
+                    <input type="text" id="destination-input" placeholder="Enter Destination" />
+                </div>
+                <button class="control-btn" onclick="calculateRoutes()">
+                    <i class="ri-search-line"></i> Find Routes
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Route Options Section -->
+        <div class="traffic-card bento-item-3">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="ri-route-line"></i>
+                    Live Route Options
+                </h3>
+            </div>
+            <div id="route-options">
+                <!-- Routes will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add the report modal -->
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <h3>Report Traffic Issue</h3>
+        <form id="reportForm">
+            <div class="form-group">
+                <label>Type of Issue</label>
+                <select id="issueType" required>
+                    <option value="ACCIDENT">Accident</option>
+                    <option value="BREAKDOWN">Vehicle Breakdown</option>
+                    <option value="HAZARD">Road Hazard</option>
+                    <option value="CONSTRUCTION">Construction</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="issueDescription" maxlength="200" placeholder="Provide additional details"></textarea>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="control-btn">Submit Report</button>
+                <button type="button" class="control-btn secondary" onclick="closeReportModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let map, trafficLayer, directionsService, directionsRenderer;
+let autocompleteOrigin, autocompleteDestination;
+let currentRoutes = [];
+let reportMarker = null;
+let issueMarkers = [];
+
+function initMap() {
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: false,
+        preserveViewport: false
+    });
+
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 13,
+        center: { lat: 34.0522, lng: -118.2437 },
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_RIGHT
+        }
+    });
+
+    directionsRenderer.setMap(map);
+    trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(map);
+
+    // Initialize autocomplete
+    autocompleteOrigin = new google.maps.places.Autocomplete(
+        document.getElementById('origin-input'),
+        { types: ['geocode'] }
+    );
+
+    autocompleteDestination = new google.maps.places.Autocomplete(
+        document.getElementById('destination-input'),
+        { types: ['geocode'] }
+    );
+
+    // Try to get user's location
+    findMyLocation();
+
+    // Load existing reports
+    loadExistingReports();
+}
+
+function findMyLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Get address from coordinates
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ location: pos }, (results, status) => {
+                    if (status === 'OK') {
+                        document.getElementById('origin-input').value = results[0].formatted_address;
+                    }
+                });
+
+                map.setCenter(pos);
+            },
+            () => {
+                handleLocationError(true);
+            }
+        );
+    } else {
+        handleLocationError(false);
+    }
+}
+
+function calculateRoutes() {
+    const origin = document.getElementById('origin-input').value;
+    const destination = document.getElementById('destination-input').value;
+
+    if (!origin || !destination) {
+        alert('Please enter both origin and destination');
+        return;
+    }
+
+    const routeTypes = [
+        { name: 'BEST', options: { optimizeWaypoints: true } },
+        { name: 'ALTERNATE', options: { provideRouteAlternatives: true } },
+        { name: 'LESS_TRAFFIC', options: { avoidHighways: true } }
+    ];
+
+    directionsService.route({
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+        drivingOptions: {
+            departureTime: new Date(),
+            trafficModel: google.maps.TrafficModel.BEST_GUESS
+        }
+    }, (response, status) => {
+        if (status === 'OK') {
+            currentRoutes = response.routes;
+            displayRouteOptions(response.routes);
+            directionsRenderer.setDirections(response);
+        } else {
+            alert('Directions request failed due to ' + status);
+        }
+    });
+}
+
+function displayRouteOptions(routes) {
+    const container = document.getElementById('route-options');
+    container.innerHTML = '';
+
+    routes.forEach((route, index) => {
+        const duration = route.legs[0].duration.text;
+        const distance = route.legs[0].distance.text;
+        const trafficDuration = route.legs[0].duration_in_traffic ? 
+            route.legs[0].duration_in_traffic.text : duration;
+
+        const card = document.createElement('div');
+        card.className = 'route-card' + (index === 0 ? ' selected' : '');
+        card.onclick = () => selectRoute(index);
+        
+        card.innerHTML = `
+            <h3>Route ${index + 1}</h3>
+            <div class="route-details">
+                <div>ETA: ${trafficDuration}</div>
+                <div>Distance: ${distance}</div>
+                ${route.warnings.length ? `<div class="warning">${route.warnings[0]}</div>` : ''}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function selectRoute(index) {
+    if (currentRoutes[index]) {
+        document.querySelectorAll('.route-card').forEach(card => card.classList.remove('selected'));
+        document.querySelectorAll('.route-card')[index].classList.add('selected');
+        
+        directionsRenderer.setRouteIndex(index);
+    }
+}
+
+function toggleTraffic() {
+    trafficLayer.setMap(trafficLayer.getMap() ? null : map);
+}
+
+function handleLocationError(browserHasGeolocation) {
+    alert(browserHasGeolocation ? 
+        'Error: The Geolocation service failed.' :
+        'Error: Your browser doesn\'t support geolocation.');
+}
+
+function openReportModal() {
+    document.getElementById('reportModal').style.display = 'block';
+    
+    // Allow user to click on map to set location
+    map.addListener('click', function(e) {
+        if (reportMarker) reportMarker.setMap(null);
+        reportMarker = new google.maps.Marker({
+            position: e.latLng,
+            map: map,
+            draggable: true,
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            }
+        });
+    });
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+    if (reportMarker) {
+        reportMarker.setMap(null);
+        reportMarker = null;
+    }
+    map.setOptions({ clickable: true });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!reportMarker) {
+        alert('Please select a location on the map');
+        return;
+    }
+
+    const report = {
+        type: document.getElementById('issueType').value,
+        description: document.getElementById('issueDescription').value,
+        location: {
+            lat: reportMarker.getPosition().lat(),
+            lng: reportMarker.getPosition().lng()
+        },
+        timestamp: new Date().toISOString()
+    };
+
+    // Send report to server (you'll need to implement the API endpoint)
+    fetch('/traffic/report/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(report)
+    })
+    .then(response => response.json())
+    .then(data => {
+        addIssueMarker(data);
+        closeReportModal();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to submit report');
+    });
+});
+
+function addIssueMarker(issue) {
+    const marker = new google.maps.Marker({
+        position: issue.location,
+        map: map,
+        icon: {
+            url: getIssueIcon(issue.type),
+            scaledSize: new google.maps.Size(30, 30)
+        }
+    });
+
+    const infoWindow = new google.maps.InfoWindow({
+        content: `
+            <div class="issue-marker ${issue.type}">
+                <h4>${getIssueTitle(issue.type)}</h4>
+                <p>${issue.description}</p>
+                <small>Reported: ${formatTimestamp(issue.timestamp)}</small>
+            </div>
+        `
+    });
+
+    marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+    });
+
+    issueMarkers.push(marker);
+}
+
+function getIssueIcon(type) {
+    const icons = {
+        ACCIDENT: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        BREAKDOWN: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+        HAZARD: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+        CONSTRUCTION: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+    };
+    return icons[type] || 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png';
+}
+
+function getIssueTitle(type) {
+    const titles = {
+        ACCIDENT: 'Traffic Accident',
+        BREAKDOWN: 'Vehicle Breakdown',
+        HAZARD: 'Road Hazard',
+        CONSTRUCTION: 'Construction Work'
+    };
+    return titles[type] || 'Traffic Issue';
+}
+
+function formatTimestamp(timestamp) {
+    return new Date(timestamp).toLocaleString();
+}
+
+function loadExistingReports() {
+    fetch('/traffic/reports/')
+        .then(response => response.json())
+        .then(data => {
+            data.reports.forEach(report => {
+                addIssueMarker(report);
+            });
+        })
+        .catch(error => console.error('Error loading reports:', error));
+}
+</script>
+
+<!-- Google Maps with async loading -->
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKM4O1T2X3hPTh70yNj5hASOjQ5U_uqCA&libraries=places&callback=initMap">
+</script>
+{% endblock %} 

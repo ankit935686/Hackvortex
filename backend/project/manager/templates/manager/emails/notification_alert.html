@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4338ca;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fd;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .priority {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .priority.high {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        .priority.normal {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+        .priority.low {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+        .timestamp {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Smart City Alert</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user.username }},</p>
+            
+            <div class="priority {{ priority|lower }}">
+                Priority: {{ priority|title }}
+            </div>
+            
+            <h2>{{ title }}</h2>
+            
+            <p>{{ message }}</p>
+            
+            <p class="timestamp">
+                Sent on: {{ timestamp|date:"F j, Y, g:i a" }}
+            </p>
+            
+            <p>This is an automated message from your Smart City Management System. Please do not reply to this email.</p>
+            
+            <p>Best regards,<br>
+            Smart City Management Team</p>
+        </div>
+    </div>
+</body>
+</html> 

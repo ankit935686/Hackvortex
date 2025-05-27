@@ -1,0 +1,596 @@
+{% comment %} {% extends 'base.html' %} {% endcomment %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart City Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #f8f9fd;
+            --foreground: #1a1a1a;
+            --card: #e4e0fb;
+            --card-foreground: #1a1a1a;
+            --primary: #4338ca;  /* Darker purple */
+            --primary-foreground: #ffffff;
+            --secondary: #f1f5f9;
+            --secondary-foreground: #64748b;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --accent: #f8fafc;
+            --accent-foreground: #0f172a;
+            --border: #e2e8f0;
+            --input: #ffffff;
+            --ring: #4338ca;
+            --radius: 1rem;
+
+            /* Purple gradient colors */
+            --purple-400: #4338ca;
+            --purple-500: #3730a3;
+            --purple-600: #312e81;
+            --purple-700: #2e1065;
+
+            /* Font variables */
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            background: linear-gradient(135deg, #f8f9fd 0%, #e4e0fb 100%);
+            background-attachment: fixed;
+            color: var(--foreground);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animated Background */
+        .animated-background {
+            display: none;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-1px);
+        }
+
+        .navbar-logo {
+            color: var(--primary);
+        }
+
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--purple-600), var(--purple-500));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: cardFloat 1s ease-out forwards;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        @keyframes cardFloat {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(to right, var(--purple-600), var(--purple-500));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .login-header p {
+            color: var(--secondary-foreground);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.75rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--secondary-foreground);
+            transition: color 0.3s ease;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-foreground);
+            transition: color 0.3s ease;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            background-color: var(--secondary);
+            border: none;
+            border-radius: var(--radius);
+            color: var(--foreground);
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        input[type="text"]:focus + .input-icon,
+        input[type="password"]:focus + .input-icon {
+            color: var(--primary);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: var(--radius);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .submit-btn:hover {
+            background: var(--purple-700);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 56, 202, 0.4);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .login-link a:hover {
+            background: var(--secondary);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .divider span {
+            background: var(--card);
+            padding: 0 1rem;
+            color: var(--secondary-foreground);
+            font-size: 0.875rem;
+        }
+
+        .google-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: var(--secondary);
+            backdrop-filter: blur(16px);
+            border: none;
+            border-radius: var(--radius);
+            color: var(--secondary-foreground);
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .google-button:hover {
+            background: var(--muted);
+            border: none;
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .login-card {
+                padding: 2rem;
+            }
+
+            .login-header h1 {
+                font-size: 2rem;
+            }
+
+            .blob-1, .blob-2 {
+                opacity: 0.3;
+            }
+        }
+
+        .background-shapes {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(1px);
+        }
+
+        .shape-1 {
+            top: 5%;
+            left: 5%;
+            width: 280px;
+            height: 280px;
+            opacity: 0.08;
+            background: linear-gradient(135deg, var(--purple-400), var(--purple-600));
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morphing1 15s ease-in-out infinite;
+            transform: rotate(-15deg);
+        }
+
+        .shape-2 {
+            bottom: 5%;
+            right: 5%;
+            width: 320px;
+            height: 320px;
+            opacity: 0.06;
+            background: linear-gradient(135deg, var(--purple-500), var(--purple-700));
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            animation: morphing2 18s ease-in-out infinite;
+            transform: rotate(15deg);
+        }
+
+        .shape-3 {
+            top: 15%;
+            right: 15%;
+            width: 220px;
+            height: 220px;
+            opacity: 0.07;
+            background: linear-gradient(135deg, var(--purple-400), var(--purple-600));
+            border-radius: 50% 50% 30% 70% / 50% 50% 70% 60%;
+            animation: morphing3 20s ease-in-out infinite;
+            transform: rotate(-5deg);
+        }
+
+        .shape-4 {
+            bottom: 15%;
+            left: 20%;
+            width: 180px;
+            height: 180px;
+            opacity: 0.05;
+            background: linear-gradient(135deg, var(--purple-500), var(--purple-700));
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morphing4 25s ease-in-out infinite;
+            transform: rotate(10deg);
+        }
+
+        /* Add a new shape for better distribution */
+        .shape-5 {
+            top: 50%;
+            left: 50%;
+            width: 150px;
+            height: 150px;
+            opacity: 0.04;
+            background: linear-gradient(135deg, var(--purple-400), var(--purple-600));
+            border-radius: 40% 60% 70% 30% / 40% 60% 40% 60%;
+            animation: morphing5 22s ease-in-out infinite;
+            transform: translate(-50%, -50%) rotate(25deg);
+        }
+
+        @keyframes morphing1 {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
+            50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+            75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
+            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        }
+
+        @keyframes morphing2 {
+            0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            25% { border-radius: 45% 55% 62% 38% / 53% 51% 49% 47%; }
+            50% { border-radius: 50% 50% 42% 58% / 45% 40% 60% 55%; }
+            75% { border-radius: 35% 65% 50% 50% / 57% 35% 65% 43%; }
+            100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        }
+
+        @keyframes morphing3 {
+            0% { border-radius: 50% 50% 30% 70% / 50% 50% 70% 60%; }
+            25% { border-radius: 40% 60% 65% 35% / 45% 45% 55% 55%; }
+            50% { border-radius: 25% 75% 45% 55% / 60% 35% 65% 40%; }
+            75% { border-radius: 55% 45% 35% 65% / 40% 60% 40% 60%; }
+            100% { border-radius: 50% 50% 30% 70% / 50% 50% 70% 60%; }
+        }
+
+        @keyframes morphing4 {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 65% 35% 45% 55% / 40% 55% 45% 60%; }
+            50% { border-radius: 40% 60% 35% 65% / 55% 30% 70% 45%; }
+            75% { border-radius: 55% 45% 65% 35% / 35% 65% 35% 65%; }
+            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        }
+
+        @keyframes morphing5 {
+            0% { border-radius: 40% 60% 70% 30% / 40% 60% 40% 60%; }
+            25% { border-radius: 60% 40% 30% 70% / 60% 40% 60% 40%; }
+            50% { border-radius: 30% 70% 60% 40% / 50% 60% 30% 70%; }
+            75% { border-radius: 70% 30% 40% 60% / 40% 50% 60% 50%; }
+            100% { border-radius: 40% 60% 70% 30% / 40% 60% 40% 60%; }
+        }
+
+        /* Add pattern overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Shapes -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+    </div>
+
+    <!-- Animated Background -->
+    <div class="animated-background">
+        <div class="gradient-blob blob-1"></div>
+        <div class="gradient-blob blob-2"></div>
+    </div>
+
+    <!-- Navbar -->
+    
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Welcome Back</h1>
+                <p>Enter your credentials to access your account</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" required>
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" required>
+                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Sign In</button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <a href="{% url 'social:begin' 'google-oauth2' %}" class="google-button">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </a>
+
+            <div class="login-link">
+                Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

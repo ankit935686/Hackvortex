@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    body {
+        font-family: var(--font-body);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+    }
+
+    .main-content {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        margin-top: var(--header-height);
+        padding: 2rem;
+    }
+
+    .ai-container {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+        transform: translate(-22%,-10%);
+
+    }
+
+    .ai-title {
+        color: var(--purple-600);
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        font-family: var(--font-heading);
+    }
+
+    .air-quality-summary {
+        background: rgba(46, 125, 50, 0.1);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(46, 125, 50, 0.2);
+    }
+
+    .air-quality-summary.warning {
+        background: rgba(239, 108, 0, 0.1);
+        border: 1px solid rgba(239, 108, 0, 0.2);
+    }
+
+    .air-quality-summary.danger {
+        background: rgba(198, 40, 40, 0.1);
+        border: 1px solid rgba(198, 40, 40, 0.2);
+    }
+
+    .air-quality-heading {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: #2e7d32;
+    }
+
+    .air-quality-summary.warning .air-quality-heading {
+        color: #ef6c00;
+    }
+
+    .air-quality-summary.danger .air-quality-heading {
+        color: #c62828;
+    }
+
+    .smoke-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .suggestion-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .suggestion-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-left: 4px solid #1a237e;
+    }
+
+    .suggestion-title {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+    }
+    
+    .loading-text {
+        margin-top: 1rem;
+        color: #666;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-left-color: #1a237e;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .refresh-button {
+        padding: 0.75rem 1.25rem;
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--purple-600);
+        color: var(--primary-foreground);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .refresh-button:hover {
+        background: var(--purple-700);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+    }
+
+    .refresh-icon {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: none;
+        transition: transform 0.3s;
+    }
+
+    .refresh-button:hover .refresh-icon {
+        animation: spin 1s linear infinite;
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="main-content">
+    <div class="ai-container">
+        <h2 class="ai-title">AI-Powered Air Quality Suggestions</h2>
+        
+        <div id="airQualitySummary" class="air-quality-summary">
+            <h3 class="air-quality-heading">Current Air Quality</h3>
+            <p id="currentAqiDesc">Analyzing your air quality data...</p>
+            <div id="airQualityValue" class="smoke-value">--</div>
+        </div>
+        
+        <div id="loadingContainer" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Generating personalized suggestions...</p>
+        </div>
+        
+        <div id="suggestionsContainer" style="display: none;">
+            <h3>Suggestions to Improve Air Quality</h3>
+            <ul id="suggestionsList" class="suggestion-list">
+                <!-- Suggestions will be inserted here -->
+            </ul>
+        </div>
+        
+        <button id="refreshButton" class="refresh-button">
+            <span class="refresh-icon"></span>
+            Get New Suggestions
+        </button>
+    </div>
+</div>
+
+<script>
+    // Function to update the air quality summary
+    function updateAirQualitySummary(data) {
+        const airQualitySummary = document.getElementById('airQualitySummary');
+        const airQualityValue = document.getElementById('airQualityValue');
+        const currentAqiDesc = document.getElementById('currentAqiDesc');
+        
+        airQualityValue.textContent = data.avg_smoke_level + ' PPM';
+        
+        // Reset classes
+        airQualitySummary.className = 'air-quality-summary';
+        
+        // Set class and description based on smoke level
+        if (data.avg_smoke_level < 230) {
+            currentAqiDesc.textContent = 'Your air quality is good. Keep up the good work!';
+        } else if (data.avg_smoke_level < 500) {
+            airQualitySummary.classList.add('warning');
+            currentAqiDesc.textContent = 'Your air quality needs attention. Consider implementing some suggestions below.';
+        } else {
+            airQualitySummary.classList.add('danger');
+            currentAqiDesc.textContent = 'Your air quality is poor. Immediate action is recommended.';
+        }
+    }
+    
+    // Function to generate suggestions using the backend
+    function generateSuggestions() {
+        const loadingContainer = document.getElementById('loadingContainer');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        
+        // Show loading, hide suggestions
+        loadingContainer.style.display = 'flex';
+        suggestionsContainer.style.display = 'none';
+        
+        // Fetch AI suggestions from the backend
+        fetch('{% url "arduinofeature:get_ai_suggestions" %}')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received AI suggestions:', data);
+                
+                // Update air quality summary
+                updateAirQualitySummary(data);
+                
+                // Populate suggestions
+                const suggestionsList = document.getElementById('suggestionsList');
+                suggestionsList.innerHTML = ''; // Clear existing suggestions
+                
+                if (data.suggestions && data.suggestions.length > 0) {
+                    data.suggestions.forEach(suggestion => {
+                        const li = document.createElement('li');
+                        li.className = 'suggestion-item';
+                        li.innerHTML = `
+                            <div class="suggestion-title">${suggestion.title}</div>
+                            <p>${suggestion.description}</p>
+                        `;
+                        suggestionsList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'suggestion-item';
+                    li.innerHTML = `
+                        <div class="suggestion-title">No suggestions available</div>
+                        <p>There are currently no AI-generated suggestions available. Please try again later.</p>
+                    `;
+                    suggestionsList.appendChild(li);
+                }
+                
+                // Show suggestions, hide loading
+                loadingContainer.style.display = 'none';
+                suggestionsContainer.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching AI suggestions:', error);
+                
+                // Show error message
+                const suggestionsList = document.getElementById('suggestionsList');
+                suggestionsList.innerHTML = `
+                    <li class="suggestion-item">
+                        <div class="suggestion-title">Error</div>
+                        <p>There was an error generating AI suggestions. Please try again later.</p>
+                    </li>
+                `;
+                
+                // Show suggestions, hide loading
+                loadingContainer.style.display = 'none';
+                suggestionsContainer.style.display = 'block';
+            });
+    }
+    
+    // Event listener for refresh button
+    document.getElementById('refreshButton').addEventListener('click', generateSuggestions);
+    
+    // Generate suggestions on page load
+    document.addEventListener('DOMContentLoaded', generateSuggestions);
+</script>
+{% endblock %}

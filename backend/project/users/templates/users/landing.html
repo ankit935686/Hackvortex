@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart City Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Add these font imports at the top of your styles */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+    /* Base Styles */
+    :root {
+      --background: #0f0f13;
+      --foreground: #f9f9fa;
+      --card: #0f0f13;
+      --card-foreground: #f9f9fa;
+      --primary: #f9f9fa;
+      --primary-foreground: #131316;
+      --secondary: #1e1e24;
+      --secondary-foreground: #f9f9fa;
+      --muted: #1e1e24;
+      --muted-foreground: #a1a1aa;
+      --accent: #1e1e24;
+      --accent-foreground: #f9f9fa;
+      --border: #1e1e24;
+      --input: #1e1e24;
+      --ring: #d4d4d8;
+      --radius: 0.5rem;
+
+      /* Custom colors */
+      --cyan-500: #06b6d4;
+      --cyan-600: #0891b2;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --emerald-600: #059669;
+      --blue-500: #3b82f6;
+      --yellow-500: #eab308;
+      --red-500: #ef4444;
+      --orange-500: #f97316;
+
+      /* Add font variables */
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+      /* Add purple gradient colors */
+      --purple-400: #a78bfa;
+      --purple-500: #8b5cf6;
+      --purple-600: #7c3aed;
+      --purple-700: #6d28d9;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-header p {
+      max-width: 48rem;
+      margin: 0 auto;
+      color: var(--muted-foreground);
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+
+    /* Icon Colors */
+    .cyan {
+      color: var(--cyan-500);
+    }
+
+    .emerald {
+      color: var(--emerald-500);
+    }
+
+    .blue {
+      color: var(--blue-500);
+    }
+
+    .yellow {
+      color: var(--yellow-500);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      position: relative;
+      min-height: auto;
+      padding: 8rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-color: var(--background);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: none;
+      z-index: 1;
+    }
+
+    .grid-animation {
+      position: absolute;
+      inset: 0;
+      background-size: 50px 50px;
+      background-image: linear-gradient(to right, rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+      width: 100%;
+      height: 100%;
+      animation: gridMove 20s linear infinite;
+      opacity: 0.2;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 50px 50px;
+      }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 2rem;
+      width: 100%;
+    }
+
+    .hero-title {
+      font-size: 4rem;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, var(--purple-500), var(--purple-400));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      max-width: 48rem;
+      margin: 0 auto 2rem;
+      color: var(--muted-foreground);
+      font-weight: 400;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(to right, var(--purple-500), var(--purple-600));
+      border: none;
+      border-radius: var(--radius);
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      letter-spacing: -0.01em;
+    }
+
+    .cta-button:hover {
+      background: linear-gradient(to right, var(--purple-600), var(--purple-700));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-flex {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .hero-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .hero-3d {
+      flex: 1;
+      height: 600px;
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--background);
+      isolation: isolate;
+    }
+
+    spline-viewer {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius);
+      background: transparent !important;
+      z-index: 1;
+    }
+
+    /* Update the watermark hide div */
+    .spline-watermark-hide {
+      position: absolute;
+      bottom: 12px;
+      right: 0;
+      width: 170px;
+      height: 45px;
+      background: var(--background);
+      z-index: 9999;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .login-button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--foreground);
+      background: transparent;
+      border: 2px solid var(--purple-500);
+      border-radius: var(--radius);
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      letter-spacing: -0.01em;
+    }
+
+    .login-button:hover {
+      background: var(--purple-500);
+      transform: translateY(-2px);
+    }
+
+    .signup-button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--background);
+      background: var(--purple-500);
+      border: none;
+      border-radius: var(--radius);
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      letter-spacing: -0.01em;
+    }
+
+    .signup-button:hover {
+      background: var(--purple-600);
+      transform: translateY(-2px);
+    }
+
+    /* Introduction Section */
+    .intro-section {
+      padding: 5rem 0;
+      background-color: var(--background);
+    }
+
+    .intro-icons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .intro-icons {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .intro-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .icon-circle {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .icon-circle.cyan {
+      background-color: rgba(6, 182, 212, 0.1);
+    }
+
+    .icon-circle.emerald {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .icon-circle.blue {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .icon-circle.yellow {
+      background-color: rgba(234, 179, 8, 0.1);
+    }
+
+    .intro-icon h3 {
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    /* Features Section */
+    .features-section {
+      padding: 5rem 0;
+      background-color: rgba(30, 30, 36, 0.3);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .features-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .feature-card {
+      background-color: rgba(30, 30, 36, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .feature-icon.cyan {
+      background-color: rgba(6, 182, 212, 0.1);
+    }
+
+    .feature-icon.emerald {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .feature-icon.blue {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .feature-icon.yellow {
+      background-color: rgba(234, 179, 8, 0.1);
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      color: var(--muted-foreground);
+      font-size: 0.875rem;
+    }
+
+    /* Live Data Section */
+    .live-data-section {
+      padding: 5rem 0;
+      background-color: var(--background);
+    }
+
+    .live-data-container {
+      max-width: 48rem;
+      margin: 0 auto;
+      background-color: rgba(30, 30, 36, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .live-data-container h3 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .metric-card {
+      background-color: rgba(15, 15, 19, 0.7);
+      border-radius: var(--radius);
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-header h4 {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .value {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .percentage {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+    }
+
+    .progress-container {
+      height: 0.5rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease;
+    }
+
+    .traffic-progress {
+      background-color: rgba(239, 68, 68, 0.7);
+    }
+
+    .aqi-progress {
+      background-color: rgba(234, 179, 8, 0.7);
+    }
+
+    .water-progress {
+      background-color: rgba(59, 130, 246, 0.7);
+    }
+
+    .energy-progress {
+      background-color: rgba(34, 197, 94, 0.7);
+    }
+
+    /* Ticker */
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      height: 2rem;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+    }
+
+    .ticker {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker 20s linear infinite;
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-right: 3rem;
+      font-weight: 500;
+      padding: 0.5rem 0;
+    }
+
+    @keyframes ticker {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* AR & AI Section */
+    .ar-ai-section {
+      padding: 5rem 0;
+      background-color: rgba(30, 30, 36, 0.3);
+    }
+
+    .ar-ai-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .ar-ai-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .ar-ai-card {
+      background-color: rgba(30, 30, 36, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .ar-ai-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .ar-ai-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .ar-ai-card p {
+      color: var(--muted-foreground);
+      font-size: 0.875rem;
+    }
+
+    /* Testimonial Section */
+    .testimonial-section {
+      padding: 5rem 0;
+      background-color: var(--background);
+    }
+
+    .testimonial-card {
+      max-width: 48rem;
+      margin: 0 auto;
+      background-color: rgba(30, 30, 36, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .testimonial-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .testimonial-content {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+
+    .testimonial-avatar {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      background: linear-gradient(to right, var(--purple-500), var(--purple-400));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .testimonial-avatar span {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .testimonial-text p {
+      font-style: italic;
+      margin-bottom: 1rem;
+      font-size: 1.125rem;
+    }
+
+    .testimonial-author h4 {
+      font-weight: 700;
+    }
+
+    .testimonial-author p {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      font-style: normal;
+      margin-bottom: 0;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 5rem 0;
+      background: linear-gradient(to bottom, var(--background), rgba(30, 30, 36, 0.3));
+    }
+
+    .cta-content {
+      max-width: 48rem;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .cta-content h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .cta-content p {
+      margin-bottom: 2rem;
+      color: var(--muted-foreground);
+      font-size: 1.125rem;
+    }
+
+    .cta-note {
+      font-size: 0.875rem !important;
+      margin-top: 1rem !important;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 2rem 0;
+      background-color: rgba(30, 30, 36, 0.5);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .footer-content {
+        flex-direction: row;
+      }
+    }
+
+    .footer-logo h3 {
+      font-size: 1.25rem;
+      background: linear-gradient(to right, var(--purple-400), var(--purple-500));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .footer-copyright {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+    }
+
+    /* Responsive Adjustments */
+    @media (min-width: 640px) {
+      .hero-title {
+        font-size: 4.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.375rem;
+      }
+
+      .section-title {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .hero-title {
+        font-size: 5rem;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .hero-flex {
+        flex-direction: column;
+      }
+      
+      .hero-text {
+        text-align: center;
+      }
+      
+      .hero-buttons {
+        justify-content: center;
+      }
+      
+      .hero-3d {
+        height: 400px;
+        width: 100%;
+      }
+    }
+
+    /* Navbar Styles */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(15, 15, 19, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 0;
+    }
+
+    .navbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .navbar-logo {
+      color: var(--purple-500);
+    }
+
+    .navbar-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--purple-500), var(--purple-400));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .navbar-menu {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .navbar-link {
+      color: var(--foreground);
+      font-weight: 500;
+      transition: color 0.3s ease;
+      font-size: 0.9375rem;
+    }
+
+    .navbar-link:hover {
+      color: var(--purple-500);
+    }
+
+    .navbar-auth {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .navbar-login {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--foreground);
+      background: transparent;
+      border: 2px solid var(--purple-500);
+      border-radius: var(--radius);
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      letter-spacing: -0.01em;
+    }
+
+    .navbar-login:hover {
+      background: var(--purple-500);
+      transform: translateY(-2px);
+    }
+
+    .navbar-signup {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--background);
+      background: var(--purple-500);
+      border: none;
+      border-radius: var(--radius);
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      letter-spacing: -0.01em;
+    }
+
+    .navbar-signup:hover {
+      background: var(--purple-600);
+      transform: translateY(-2px);
+    }
+
+    /* Add responsive styles for navbar */
+    @media (max-width: 768px) {
+      .navbar-menu {
+        gap: 1rem;
+      }
+      
+      .navbar-link {
+        display: none;
+      }
+    }
+
+    /* Dropdown Styles */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--background);
+        min-width: 160px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        z-index: 1000;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: var(--foreground);
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--accent);
+    }
+
+    .dropdown-item svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background-color: var(--border);
+        margin: 0.25rem 0;
+    }
+
+    /* Button Styles */
+    .auth-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: var(--radius);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .login-dropdown {
+        background: transparent;
+        border: 2px solid var(--purple-500);
+        color: var(--foreground);
+    }
+
+    .login-dropdown:hover {
+        background: var(--purple-500);
+    }
+
+    .signup-dropdown {
+        background: var(--purple-500);
+        border: none;
+        color: var(--background);
+    }
+
+    .signup-dropdown:hover {
+        background: var(--purple-600);
+    }
+
+    /* Icon colors */
+    .user-icon { color: var(--purple-500); }
+    .manager-icon { color: var(--emerald-500); }
+
+    /* Chat Widget Styles */
+    .chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .chat-button {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        background: var(--purple-500);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s;
+    }
+
+    .chat-button:hover {
+        transform: scale(1.05);
+    }
+
+    .chat-container {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 350px;
+        height: 500px;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-header h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .chat-close {
+        background: none;
+        border: none;
+        color: var(--foreground);
+        cursor: pointer;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message {
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+
+    .bot-message {
+        background: var(--secondary);
+        color: var(--foreground);
+        align-self: flex-start;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .user-message {
+        background: var(--purple-500);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .chat-input {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--input);
+        color: var(--foreground);
+    }
+
+    .chat-input button {
+        padding: 0.5rem;
+        background: var(--purple-500);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .chat-input button:hover {
+        background: var(--purple-600);
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@0.9.508/build/spline-viewer.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <div class="navbar-brand">
+        <svg class="navbar-logo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+        <span class="navbar-title">SmartCity</span>
+      </div>
+      <div class="navbar-menu">
+        <a href="#features" class="navbar-link">Features</a>
+        <a href="#live-data" class="navbar-link">Live Data</a>
+        <div class="navbar-auth">
+          <!-- Login Dropdown -->
+          <div class="dropdown">
+            <button class="auth-button login-dropdown">
+              Login
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="dropdown-content">
+              <a href="{% url 'login' %}" class="dropdown-item">
+                <svg class="user-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                User Login
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="{% url 'manager:login' %}" class="dropdown-item">
+                <svg class="manager-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Manager Login
+              </a>
+            </div>
+          </div>
+
+          <!-- Signup Dropdown -->
+          <div class="dropdown">
+            <button class="auth-button signup-dropdown">
+              Sign Up
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="dropdown-content">
+              <a href="{% url 'signup' %}" class="dropdown-item">
+                <svg class="user-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="19" y1="8" x2="19" y2="14"></line>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                User Signup
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="{% url 'manager:signup' %}" class="dropdown-item">
+                <svg class="manager-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  <line x1="19" y1="8" x2="19" y2="14"></line>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Manager Signup
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="hero-overlay"></div>
+      <div class="grid-animation"></div>
+      <div class="container hero-content">
+        <div class="hero-flex">
+          <div class="hero-text">
+            <h1 class="hero-title">Smart City Dashboard</h1>
+            <p class="hero-subtitle">
+              Live Insights for a Sustainable Future. Track traffic, air quality, water levels, and energy usage in real time. Stay informed. Stay ahead.
+            </p>
+            <div class="hero-buttons">
+              
+              <a href="{% url 'signup' %}" class="signup-button">Get Started</a>
+            </div>
+          </div>
+          <div class="hero-3d">
+            <spline-viewer 
+              url="https://prod.spline.design/wPfp5VePY5Lg7SZi/scene.splinecode"
+              loading="lazy"
+              events-target="global"
+              background="transparent"
+              style="width: 100%; height: 100%;">
+            </spline-viewer>
+            <div class="spline-watermark-hide"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="intro-section" id="intro">
+      <div class="container">
+        <div class="section-header">
+          <h2>Transforming Urban Living</h2>
+          <p>
+            Our dashboard empowers city officials and citizens to monitor and respond to urban challenges in real-time. 
+            From traffic congestion to pollution levels, water availability to energy consumption, 
+            we provide the insights needed for a smarter, more sustainable city.
+          </p>
+        </div>
+        
+        <div class="intro-icons">
+          <div class="intro-icon">
+            <div class="icon-circle cyan">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                <circle cx="7" cy="17" r="2"></circle>
+                <path d="M9 17h6"></path>
+                <circle cx="17" cy="17" r="2"></circle>
+              </svg>
+            </div>
+            <h3>Traffic</h3>
+          </div>
+          
+          <div class="intro-icon">
+            <div class="icon-circle emerald">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                <path d="M2 12h20"></path>
+              </svg>
+            </div>
+            <h3>Pollution</h3>
+          </div>
+          
+          <div class="intro-icon">
+            <div class="icon-circle blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+              </svg>
+            </div>
+            <h3>Water</h3>
+          </div>
+          
+          <div class="intro-icon">
+            <div class="icon-circle yellow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+            </div>
+            <h3>Energy</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Features Grid -->
+    <section class="features-section" id="features">
+      <div class="container">
+        <h2 class="section-title">Key Features</h2>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon cyan">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </div>
+            <h3>Real-time Monitoring</h3>
+            <p>Live city data from IoT sensors & APIs, providing up-to-the-minute insights on urban conditions.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon emerald">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                <path d="M12 9v4"></path>
+                <path d="M12 17h.01"></path>
+              </svg>
+            </div>
+            <h3>AI-Powered Alerts</h3>
+            <p>Instant warnings for traffic congestion, pollution spikes, and water shortages before they impact citizens.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <h3>Google Maps Integration</h3>
+            <p>View congestion, alternative routes & emergency paths with our seamless maps integration.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon yellow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <h3>Citizen Reports</h3>
+            <p>Report issues like potholes, pollution, and water leaks directly through the platform for faster resolution.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Data Preview -->
+    <section class="live-data-section" id="live-data">
+      <div class="container">
+        <h2 class="section-title">Live Data Preview</h2>
+        
+        <div class="live-data-container">
+          <h3>City Metrics Dashboard</h3>
+          
+          <div class="metrics-grid">
+            <!-- Traffic Metric -->
+            <div class="metric-card">
+              <div class="metric-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon cyan">
+                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                  <circle cx="7" cy="17" r="2"></circle>
+                  <path d="M9 17h6"></path>
+                  <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+                <h4>Traffic Congestion</h4>
+              </div>
+              <div class="metric-value">
+                <span class="value traffic-value">High</span>
+                <span class="percentage traffic-percentage">75%</span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar traffic-progress" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <!-- Air Quality Metric -->
+            <div class="metric-card">
+              <div class="metric-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon emerald">
+                  <path d="M3 3v18h18"></path>
+                  <path d="M18 17V9"></path>
+                  <path d="M13 17V5"></path>
+                  <path d="M8 17v-3"></path>
+                </svg>
+                <h4>Air Quality Index</h4>
+              </div>
+              <div class="metric-value">
+                <span class="value aqi-value">Moderate</span>
+                <span class="percentage aqi-percentage">AQI: 150</span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar aqi-progress" style="width: 50%"></div>
+              </div>
+            </div>
+
+            <!-- Water Level Metric -->
+            <div class="metric-card">
+              <div class="metric-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon blue">
+                  <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                  <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+                </svg>
+                <h4>Water Level</h4>
+              </div>
+              <div class="metric-value">
+                <span class="value water-value">80%</span>
+                <span class="percentage water-percentage">Capacity</span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar water-progress" style="width: 80%"></div>
+              </div>
+            </div>
+
+            <!-- Energy Usage Metric -->
+            <div class="metric-card">
+              <div class="metric-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon yellow">
+                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                <h4>Energy Usage</h4>
+              </div>
+              <div class="metric-value">
+                <span class="value energy-value">Normal</span>
+                <span class="percentage energy-percentage">50%</span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar energy-progress" style="width: 50%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Ticker -->
+          <div class="ticker-wrap">
+            <div class="ticker">
+              <div class="ticker-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon cyan">
+                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                  <circle cx="7" cy="17" r="2"></circle>
+                  <path d="M9 17h6"></path>
+                  <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+                <span class="ticker-traffic">Traffic: High</span>
+              </div>
+              <div class="ticker-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon emerald">
+                  <path d="M3 3v18h18"></path>
+                  <path d="M18 17V9"></path>
+                  <path d="M13 17V5"></path>
+                  <path d="M8 17v-3"></path>
+                </svg>
+                <span class="ticker-aqi">AQI: 150 (Moderate)</span>
+              </div>
+              <div class="ticker-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon blue">
+                  <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                  <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+                </svg>
+                <span class="ticker-water">Water: 80%</span>
+              </div>
+              <div class="ticker-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon yellow">
+                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                <span class="ticker-energy">Energy: Normal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AR & AI Integration -->
+    <section class="ar-ai-section" id="ar-ai">
+      <div class="container">
+        <h2 class="section-title">AR & AI Integration</h2>
+        
+        <div class="ar-ai-grid">
+          <div class="ar-ai-card">
+            <div class="feature-icon cyan">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <path d="M12 18h.01"></path>
+              </svg>
+            </div>
+            <h3>Augmented Reality Visualization</h3>
+            <p>Users can scan their surroundings to see traffic & pollution overlays, bringing data to life in the real world.</p>
+          </div>
+          
+          <div class="ar-ai-card">
+            <div class="feature-icon emerald">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <path d="M12 2a8 8 0 0 0-8 8v12h16V10a8 8 0 0 0-8-8Z"></path>
+                <path d="M8 16a4 4 0 0 1 8 0"></path>
+                <path d="M9 11h.01"></path>
+                <path d="M15 11h.01"></path>
+              </svg>
+            </div>
+            <h3>AI Predictions</h3>
+            <p>Forecasts upcoming traffic jams & pollution levels for the next 24 hours, helping citizens plan their day.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonial-section" id="testimonial">
+      <div class="container">
+        <h2 class="section-title">Citizen Impact</h2>
+        
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <div class="testimonial-avatar">
+              <span>MJ</span>
+            </div>
+            <div class="testimonial-text">
+              <p>"The Smart City Dashboard has transformed how we manage urban resources. Traffic congestion is down 30%, 
+                and our emergency response times have improved by 45%. It's not just a tool—it's become essential 
+                infrastructure for our city planning."</p>
+              <div class="testimonial-author">
+                <h4>Maria Johnson</h4>
+                <p>City Planning Director</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Join the Smart City Initiative</h2>
+          <p>Be part of the movement towards smarter, more sustainable urban living. 
+            Our platform is available on web and mobile, and is open-source for continuous innovation.</p>
+          <a href="{% url 'signup' %}" class="cta-button">Get Started</a>
+          <p class="cta-note">Available on Web & Mobile. Open-source for innovation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <h3>Smart City Dashboard</h3>
+          </div>
+          <div class="footer-copyright">
+            <p>© <span id="current-year"></span> Smart City Initiative. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Chat Widget -->
+  <div class="chat-widget">
+    <button id="chatButton" class="chat-button">
+      <i class="ri-message-3-line"></i>
+    </button>
+    <div id="chatContainer" class="chat-container" style="display: none;">
+      <div class="chat-header">
+        <h3>Smart City Assistant</h3>
+        <button id="chatClose" class="chat-close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your message...">
+        <button id="sendMessage">
+          <i class="ri-send-plane-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Initialize GSAP and ScrollTrigger
+import gsap from "gsap"
+import ScrollTrigger from "gsap/ScrollTrigger"
+
+gsap.registerPlugin(ScrollTrigger)
+
+// Set current year in footer
+document.getElementById("current-year").textContent = new Date().getFullYear()
+
+// Hero animations
+const heroTl = gsap.timeline()
+heroTl.from(".hero-title", {
+  y: 50,
+  opacity: 0,
+  duration: 1,
+  ease: "power3.out",
+})
+heroTl.from(
+  ".hero-subtitle",
+  {
+    y: 30,
+    opacity: 0,
+    duration: 0.8,
+    ease: "power3.out",
+  },
+  "-=0.6",
+)
+heroTl.from(
+  ".hero-content .cta-button",
+  {
+    y: 20,
+    opacity: 0,
+    duration: 0.6,
+    ease: "power3.out",
+  },
+  "-=0.4",
+)
+
+// Intro section animations
+gsap.from(".intro-icon", {
+  scrollTrigger: {
+    trigger: "#intro",
+    start: "top 80%",
+  },
+  y: 30,
+  opacity: 0,
+  duration: 0.6,
+  stagger: 0.2,
+  ease: "back.out(1.7)",
+})
+
+// Features animations
+gsap.from(".feature-card", {
+  scrollTrigger: {
+    trigger: "#features",
+    start: "top 75%",
+  },
+  y: 50,
+  opacity: 0,
+  duration: 0.8,
+  stagger: 0.15,
+  ease: "power3.out",
+})
+
+// Live data animations
+gsap.from(".live-data-container", {
+  scrollTrigger: {
+    trigger: "#live-data",
+    start: "top 70%",
+  },
+  scale: 0.9,
+  opacity: 0,
+  duration: 0.8,
+  ease: "power2.out",
+})
+
+// AR & AI section animations
+gsap.from(".ar-ai-card", {
+  scrollTrigger: {
+    trigger: "#ar-ai",
+    start: "top 70%",
+  },
+  x: (index) => (index % 2 === 0 ? -50 : 50),
+  opacity: 0,
+  duration: 0.8,
+  stagger: 0.2,
+  ease: "power3.out",
+})
+
+// Testimonial animations
+gsap.from(".testimonial-card", {
+  scrollTrigger: {
+    trigger: "#testimonial",
+    start: "top 75%",
+  },
+  y: 30,
+  opacity: 0,
+  duration: 0.8,
+  ease: "power2.out",
+})
+
+// CTA animations
+gsap.from(".cta-content", {
+  scrollTrigger: {
+    trigger: "#cta",
+    start: "top 80%",
+  },
+  y: 30,
+  opacity: 0,
+  duration: 0.8,
+  ease: "power3.out",
+})
+
+// Live data simulation
+function updateLiveData() {
+  // Current values
+  const trafficEl = document.querySelector(".traffic-value")
+  const trafficPercentEl = document.querySelector(".traffic-percentage")
+  const trafficProgressEl = document.querySelector(".traffic-progress")
+  const tickerTrafficEl = document.querySelector(".ticker-traffic")
+
+  const aqiEl = document.querySelector(".aqi-value")
+  const aqiPercentEl = document.querySelector(".aqi-percentage")
+  const aqiProgressEl = document.querySelector(".aqi-progress")
+  const tickerAqiEl = document.querySelector(".ticker-aqi")
+
+  const waterEl = document.querySelector(".water-value")
+  const waterProgressEl = document.querySelector(".water-progress")
+  const tickerWaterEl = document.querySelector(".ticker-water")
+
+  const energyEl = document.querySelector(".energy-value")
+  const energyPercentEl = document.querySelector(".energy-percentage")
+  const energyProgressEl = document.querySelector(".energy-progress")
+  const tickerEnergyEl = document.querySelector(".ticker-energy")
+
+  // Get current values
+  let trafficValue = Number.parseInt(trafficProgressEl.style.width) || 75
+  let aqiValue = Number.parseInt(aqiPercentEl.textContent.replace("AQI: ", "")) || 150
+  let waterValue = Number.parseInt(waterEl.textContent) || 80
+  let energyValue = Number.parseInt(energyProgressEl.style.width) || 50
+
+  // Random fluctuations
+  trafficValue = Math.min(Math.max(trafficValue + (Math.random() * 20 - 10), 0), 100)
+  aqiValue = Math.min(Math.max(aqiValue + (Math.random() * 30 - 15), 0), 300)
+  waterValue = Math.min(Math.max(waterValue + (Math.random() * 10 - 5), 0), 100)
+  energyValue = Math.min(Math.max(energyValue + (Math.random() * 15 - 7.5), 0), 100)
+
+  // Update traffic level based on value
+  let trafficLevel = "Low"
+  let trafficColor = "text-green-500"
+  if (trafficValue > 75) {
+    trafficLevel = "Severe"
+    trafficColor = "var(--red-500)"
+  } else if (trafficValue > 50) {
+    trafficLevel = "High"
+    trafficColor = "var(--orange-500)"
+  } else if (trafficValue > 25) {
+    trafficLevel = "Moderate"
+    trafficColor = "var(--yellow-500)"
+  } else {
+    trafficColor = "var(--emerald-500)"
+  }
+
+  // Update AQI level based on value
+  let aqiLevel = "Good"
+  let aqiColor = "var(--emerald-500)"
+  if (aqiValue > 200) {
+    aqiLevel = "Hazardous"
+    aqiColor = "var(--red-500)"
+  } else if (aqiValue > 100) {
+    aqiLevel = "Unhealthy"
+    aqiColor = "var(--orange-500)"
+  } else if (aqiValue > 50) {
+    aqiLevel = "Moderate"
+    aqiColor = "var(--yellow-500)"
+  }
+
+  // Update energy level based on value
+  let energyLevel = "Low"
+  let energyColor = "var(--emerald-500)"
+  if (energyValue > 75) {
+    energyLevel = "Peak"
+    energyColor = "var(--red-500)"
+  } else if (energyValue > 60) {
+    energyLevel = "High"
+    energyColor = "var(--orange-500)"
+  } else if (energyValue > 30) {
+    energyLevel = "Normal"
+    energyColor = "var(--emerald-500)"
+  }
+
+  // Update DOM
+  trafficEl.textContent = trafficLevel
+  trafficEl.style.color = trafficColor
+  trafficPercentEl.textContent = `${Math.round(trafficValue)}%`
+  trafficProgressEl.style.width = `${trafficValue}%`
+  tickerTrafficEl.textContent = `Traffic: ${trafficLevel}`
+  tickerTrafficEl.style.color = trafficColor
+
+  aqiEl.textContent = aqiLevel
+  aqiEl.style.color = aqiColor
+  aqiPercentEl.textContent = `AQI: ${Math.round(aqiValue)}`
+  aqiProgressEl.style.width = `${(aqiValue / 300) * 100}%`
+  tickerAqiEl.textContent = `AQI: ${Math.round(aqiValue)} (${aqiLevel})`
+  tickerAqiEl.style.color = aqiColor
+
+  waterEl.textContent = `${Math.round(waterValue)}%`
+  waterProgressEl.style.width = `${waterValue}%`
+  tickerWaterEl.textContent = `Water: ${Math.round(waterValue)}%`
+
+  energyEl.textContent = energyLevel
+  energyEl.style.color = energyColor
+  energyPercentEl.textContent = `${Math.round(energyValue)}%`
+  energyProgressEl.style.width = `${energyValue}%`
+  tickerEnergyEl.textContent = `Energy: ${energyLevel}`
+  tickerEnergyEl.style.color = energyColor
+
+  // Update progress bar colors based on values
+  trafficProgressEl.style.backgroundColor = getProgressColor(trafficValue)
+  aqiProgressEl.style.backgroundColor = getProgressColor((aqiValue / 300) * 100)
+  energyProgressEl.style.backgroundColor = getProgressColor(energyValue)
+}
+
+// Helper function to get progress color based on value
+function getProgressColor(value) {
+  if (value > 75) return "rgba(239, 68, 68, 0.7)" // red
+  if (value > 50) return "rgba(249, 115, 22, 0.7)" // orange
+  if (value > 25) return "rgba(234, 179, 8, 0.7)" // yellow
+  return "rgba(34, 197, 94, 0.7)" // green
+}
+
+// Update data every 3 seconds
+setInterval(updateLiveData, 3000)
+
+// Initial update
+updateLiveData()
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chatButton = document.getElementById('chatButton');
+    const chatContainer = document.getElementById('chatContainer');
+    const chatClose = document.getElementById('chatClose');
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const sendMessage = document.getElementById('sendMessage');
+
+    // Gemini API key
+    const API_KEY = 'AIzaSyC3ekNJCildP0PuU5rPYZKdCtwmaYS3S50';
+
+    // Add initial welcome message
+    addMessage("Namaste! 🙏 I'm your Smart City Assistant. I can help you with local services, traffic updates, emergency assistance, and public amenities. How may I assist you today?");
+
+    chatButton.addEventListener('click', () => {
+        chatContainer.classList.add('active');
+        chatContainer.style.display = 'flex';
+    });
+
+    chatClose.addEventListener('click', () => {
+        chatContainer.classList.remove('active');
+        chatContainer.style.display = 'none';
+    });
+
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+        messageDiv.textContent = message;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendToGemini(message) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `You are a smart AI assistant for Indian cities, designed to help citizens with municipal and urban services. You are well-versed in:
+
+1. Indian traffic rules, road conditions, and public transportation
+2. Local emergency services (police, ambulance, fire)
+3. Municipal complaints and grievance redressal systems
+4. Environmental monitoring (AQI, weather alerts)
+5. Public utilities (water supply, electricity, waste management)
+6. Local government schemes and initiatives
+7. Smart City Mission projects in India
+8. Common civic issues in Indian cities
+
+Guidelines for your responses:
+- Use clear, simple language without special characters like asterisks
+- Format numbered lists with proper spacing
+- Use proper punctuation and capitalization
+- Maintain a polite and helpful tone
+- Use Indian context and local terminology where appropriate
+- Provide practical, actionable advice
+- Keep responses concise and well-structured
+
+Current user message: ${message}`
+                        }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            let response_text = data.candidates[0].content.parts[0].text;
+            
+            // Clean up formatting
+            response_text = response_text
+                .replace(/\*\*/g, '') // Remove asterisks
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+
+            return response_text;
+        } catch (error) {
+            console.error('Error:', error);
+            return 'I apologize, but I encountered an error. Please try again.';
+        }
+    }
+
+    async function handleUserMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        userInput.value = '';
+
+        // Show typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message typing';
+        typingDiv.textContent = 'Typing...';
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const response = await sendToGemini(message);
+        chatMessages.removeChild(typingDiv);
+        addMessage(response);
+    }
+
+    sendMessage.addEventListener('click', handleUserMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleUserMessage();
+        }
+    });
+});
+  </script>
+</body>
+</html>

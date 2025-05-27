@@ -1,0 +1,338 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Mumbai Energy Usage - Smart City{% endblock %}
+
+{% block content %}
+<style>
+    .energy-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--card);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .stat-card:hover {
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: #4f46e5;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #4f46e5;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9375rem;
+        opacity: 0.8;
+    }
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--card);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .chart-card:hover {
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    .chart-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-family: var(--font-heading);
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #4f46e5;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        opacity: 0.9;
+    }
+
+    .chart-subtitle {
+        color: #6b7280;
+        font-size: 0.9375rem;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 1400px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .energy-container {
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .chart-card {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .stat-card:hover,
+    [data-theme="dark"] .chart-card:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .stat-value,
+    [data-theme="dark"] .chart-title {
+        color: rgba(139, 92, 246, 0.9);
+    }
+
+    [data-theme="dark"] .stat-label,
+    [data-theme="dark"] .chart-subtitle {
+        color: var(--secondary-foreground);
+    }
+</style>
+
+<div class="energy-container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="ri-flashlight-line"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ energy_data.current_demand }} MW</div>
+                    <div class="stat-label">Current Power Demand</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="ri-line-chart-line"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ energy_data.peak_demand }} MW</div>
+                    <div class="stat-label">Peak Demand Today</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="ri-sun-line"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ energy_data.renewable_percentage }} MWH</div>
+                    <div class="stat-label">Renewable Energy</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="ri-leaf-line"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ energy_data.carbon_saved }} KT</div>
+                    <div class="stat-label">Carbon Emissions Saved</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Mumbai Power Consumption Trend</h3>
+                <p class="chart-subtitle">Last 12 hours consumption in MW</p>
+            </div>
+            <div style="position: relative; height: 300px;">
+                <canvas id="powerDemandChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Mumbai Energy Sources</h3>
+                <p class="chart-subtitle">Current power generation mix</p>
+            </div>
+            <div style="position: relative; height: 300px;">
+                <canvas id="powerSourcesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Initialize all charts when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse the data passed from the backend
+    const hourlyDemand = JSON.parse('{{ hourly_demand|safe }}');
+    const hourlyLabels = JSON.parse('{{ hourly_labels|safe }}');
+    const energyData = {{ energy_data|safe }};
+
+    // Power Demand Chart
+    const demandCtx = document.getElementById('powerDemandChart').getContext('2d');
+    new Chart(demandCtx, {
+        type: 'line',
+        data: {
+            labels: hourlyLabels,
+            datasets: [{
+                label: 'Power Demand (MW)',
+                data: hourlyDemand,
+                borderColor: '#4338ca',
+                backgroundColor: 'rgba(67, 56, 202, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Power Demand (MW)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            }
+        }
+    });
+
+    // Power Sources Distribution Chart
+    const sourcesCtx = document.getElementById('powerSourcesChart').getContext('2d');
+    new Chart(sourcesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(energyData.sources),
+            datasets: [{
+                data: Object.values(energyData.sources),
+                backgroundColor: [
+                    '#ef4444', // Thermal
+                    '#3b82f6', // Hydro
+                    '#f59e0b', // Solar
+                    '#10b981', // Wind
+                    '#6366f1'  // Nuclear
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.formattedValue + ' MW';
+                            }
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+
+    // Update real-time values
+    function updateRealTimeValues() {
+        document.getElementById('currentDemand').textContent = energyData.current_demand.toLocaleString();
+        document.getElementById('peakDemand').textContent = energyData.peak_demand.toLocaleString();
+        document.getElementById('powerDeficit').textContent = energyData.power_deficit.toLocaleString();
+        document.getElementById('gridFrequency').textContent = energyData.grid_frequency.toFixed(2);
+        document.getElementById('powerQualityIndex').textContent = energyData.power_quality_index;
+        document.getElementById('carbonSaved').textContent = energyData.carbon_saved.toLocaleString();
+        document.getElementById('renewablePercentage').textContent = energyData.renewable_percentage;
+    }
+
+    // Initial update
+    updateRealTimeValues();
+
+    // Update every 30 seconds
+    setInterval(updateRealTimeValues, 30000);
+});
+</script>
+{% endblock %}

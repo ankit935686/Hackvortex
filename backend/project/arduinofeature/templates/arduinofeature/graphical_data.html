@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body {
+        font-family: var(--font-body);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+    }
+
+    .main-content {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        margin-top: var(--header-height);
+        padding: 2rem;
+    }
+
+    .chart-container {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+        transform: translate(-22%,-10%);
+    }
+
+    .chart-title {
+        color: var(--purple-600);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        font-family: var(--font-heading);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 400px;
+    }
+
+    .chart-type-selector {
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .time-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .time-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: var(--radius);
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--purple-600);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9375rem;
+    }
+
+    .time-btn:hover, .time-btn.active {
+        background: var(--purple-600);
+        color: var(--primary-foreground);
+    }
+
+    .chart-type-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: var(--radius);
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--purple-600);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9375rem;
+    }
+
+    .chart-type-btn:hover, .chart-type-btn.active {
+        background: var(--purple-600);
+        color: var(--primary-foreground);
+    }
+
+    .last-update {
+        color: #666;
+        font-size: 0.9rem;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .loading-indicator {
+        width: 12px;
+        height: 12px;
+        border: 2px solid #1a237e;
+        border-radius: 50%;
+        border-top-color: transparent;
+        display: none;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-indicator.active {
+        display: inline-block;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+        margin-top: 1rem;
+    }
+
+    .stat-box {
+        background: #f5f5f5;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .stat-title {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1a237e;
+    }
+
+    .stat-box.safe {
+        background-color: rgba(46, 125, 50, 0.1);
+    }
+
+    .stat-box.warning {
+        background-color: rgba(239, 108, 0, 0.1);
+    }
+
+    .stat-box.danger {
+        background-color: rgba(198, 40, 40, 0.1);
+    }
+
+    .stat-box.safe .stat-value {
+        color: #2e7d32;
+    }
+
+    .stat-box.warning .stat-value {
+        color: #ef6c00;
+    }
+
+    .stat-box.danger .stat-value {
+        color: #c62828;
+    }
+
+    .status-distribution {
+        height: 200px;
+        margin-top: 2rem;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="main-content">
+    <div class="chart-container">
+        <div class="chart-title">
+            <h2>Smoke Level Trends</h2>
+            <div class="time-selector">
+                <button class="time-btn" data-range="10m">10 Min</button>
+                <button class="time-btn" data-range="1h">1 Hour</button>
+                <button class="time-btn" data-range="6h">6 Hours</button>
+                <button class="time-btn" data-range="24h">24 Hours</button>
+                <button class="time-btn" data-range="7d">7 Days</button>
+                <button class="time-btn" data-range="all">All Data</button>
+            </div>
+        </div>
+        
+        <div id="total-records-info" style="text-align: center; margin-bottom: 15px; color: #1a237e; font-weight: bold;">
+            Total records in database: <span id="totalRecordsValue">{{ chart_data.stats.total_count|default:"--" }}</span>
+        </div>
+        
+        <!-- Stats summary -->
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-title">Average Level</div>
+                <div id="avgStat" class="stat-value">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Minimum Level</div>
+                <div id="minStat" class="stat-value">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Maximum Level</div>
+                <div id="maxStat" class="stat-value">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Data Points</div>
+                <div id="countStat" class="stat-value">--</div>
+                <div id="totalCountInfo" class="stat-subtitle" style="font-size: 0.8rem; color: #666; margin-top: 5px; display: none;">
+                    of <span id="totalCountValue">--</span> total records
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-type-selector">
+            <button class="chart-type-btn active" onclick="changeChartType('line')">Line Chart</button>
+            <button class="chart-type-btn" onclick="changeChartType('bar')">Bar Chart</button>
+            <div class="last-update">
+                <span id="lastUpdate">Last update: --</span>
+                <div class="loading-indicator" id="loadingIndicator"></div>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="smokeChart"></canvas>
+        </div>
+        
+        <h3 style="margin-top: 3rem; color: #1a237e;">Status Distribution</h3>
+        <div class="stats-container">
+            <div class="stat-box safe">
+                <div class="stat-title">Safe Readings</div>
+                <div id="safeStat" class="stat-value">--</div>
+            </div>
+            <div class="stat-box warning">
+                <div class="stat-title">Warning Readings</div>
+                <div id="warningStat" class="stat-value">--</div>
+            </div>
+            <div class="stat-box danger">
+                <div class="stat-title">Danger Readings</div>
+                <div id="dangerStat" class="stat-value">--</div>
+            </div>
+        </div>
+        
+        <div class="status-distribution">
+            <canvas id="distributionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const UPDATE_INTERVAL = 10000; // 10 seconds in milliseconds
+    let chartData = {{ chart_data|safe }};
+    let smokeChart;
+    let distributionChart;
+    let currentChartType = 'line';
+    let currentTimeRange = '{{ chart_data.time_range|default:"10m" }}';
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Set the active time range button
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        if (btn.dataset.range === currentTimeRange) {
+            btn.classList.add('active');
+        }
+        
+        // Add click event to time buttons
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTimeRange = this.dataset.range;
+            updateChartData();
+        });
+    });
+
+    function updateStats() {
+        // Update statistics display
+        if (chartData.stats) {
+            document.getElementById('avgStat').textContent = chartData.stats.avg + ' PPM';
+            document.getElementById('minStat').textContent = chartData.stats.min + ' PPM';
+            document.getElementById('maxStat').textContent = chartData.stats.max + ' PPM';
+            document.getElementById('countStat').textContent = chartData.stats.count;
+            
+            // Update total records value
+            if (chartData.stats.total_count) {
+                document.getElementById('totalRecordsValue').textContent = chartData.stats.total_count;
+            }
+            
+            // Show sampling information if applicable
+            const totalCountInfo = document.getElementById('totalCountInfo');
+            if (chartData.sampled) {
+                totalCountInfo.style.display = 'block';
+                document.getElementById('totalCountValue').textContent = chartData.original_count;
+            } else {
+                totalCountInfo.style.display = 'none';
+            }
+            
+            document.getElementById('safeStat').textContent = chartData.stats.safe_count;
+            document.getElementById('warningStat').textContent = chartData.stats.warning_count;
+            document.getElementById('dangerStat').textContent = chartData.stats.danger_count;
+            
+            // Create/update the distribution chart
+            createDistributionChart();
+        }
+    }
+
+    function createDistributionChart() {
+        const ctx = document.getElementById('distributionChart').getContext('2d');
+        
+        if (distributionChart) {
+            distributionChart.destroy();
+        }
+        
+        distributionChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Safe', 'Warning', 'Danger'],
+                datasets: [{
+                    data: [
+                        chartData.stats.safe_count,
+                        chartData.stats.warning_count,
+                        chartData.stats.danger_count
+                    ],
+                    backgroundColor: [
+                        'rgba(46, 125, 50, 0.7)',  // Safe - green
+                        'rgba(239, 108, 0, 0.7)',  // Warning - orange
+                        'rgba(198, 40, 40, 0.7)'   // Danger - red
+                    ],
+                    borderColor: [
+                        'rgb(46, 125, 50)',
+                        'rgb(239, 108, 0)',
+                        'rgb(198, 40, 40)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function createChart(type) {
+        const ctx = document.getElementById('smokeChart').getContext('2d');
+        
+        if (smokeChart) {
+            smokeChart.destroy();
+        }
+
+        // Configure chart color based on data values
+        const backgroundColors = chartData.values.map(value => {
+            if (value < 230) return 'rgba(46, 125, 50, 0.2)'; // Safe - green
+            if (value < 500) return 'rgba(239, 108, 0, 0.2)'; // Warning - orange
+            return 'rgba(198, 40, 40, 0.2)'; // Danger - red
+        });
+        
+        const borderColors = chartData.values.map(value => {
+            if (value < 230) return 'rgb(46, 125, 50)'; // Safe - green
+            if (value < 500) return 'rgb(239, 108, 0)'; // Warning - orange
+            return 'rgb(198, 40, 40)'; // Danger - red
+        });
+
+        smokeChart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Smoke Level (PPM)',
+                    data: chartData.values,
+                    borderColor: type === 'line' ? '#1a237e' : borderColors,
+                    backgroundColor: type === 'line' ? 'rgba(26, 35, 126, 0.1)' : backgroundColors,
+                    borderWidth: 2,
+                    fill: type === 'line',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Smoke Level (PPM)'
+                        },
+                        suggestedMax: chartData.stats && chartData.stats.max > 600 ? chartData.stats.max + 100 : 600
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: getChartTitle()
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                let status = '';
+                                if (value < 230) status = ' (Safe)';
+                                else if (value < 500) status = ' (Warning)';
+                                else status = ' (Danger)';
+                                return `Smoke Level: ${value} PPM${status}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function getChartTitle() {
+        // Get a descriptive title based on the time range
+        let title;
+        switch(currentTimeRange) {
+            case '10m': title = 'Last 10 Minutes'; break;
+            case '1h': title = 'Last Hour'; break;
+            case '6h': title = 'Last 6 Hours'; break;
+            case '24h': title = 'Last 24 Hours'; break;
+            case '7d': title = 'Last 7 Days'; break;
+            case 'all': title = 'All Historical Data'; break;
+            default: title = 'Smoke Level Trend';
+        }
+        
+        // Add sampling information if applicable
+        if (chartData.sampled) {
+            title += ` (Sampled: ${chartData.sample_count} of ${chartData.original_count} points)`;
+        }
+        
+        return title;
+    }
+
+    function updateChartData() {
+        loadingIndicator.classList.add('active');
+
+        fetch(`{% url "arduinofeature:get_chart_data" %}?range=${currentTimeRange}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received chart data:', data);
+                chartData = data;
+                
+                // Update stats display
+                updateStats();
+                
+                // Check if we have data points
+                if (data.labels.length > 0) {
+                    createChart(currentChartType);
+                } else {
+                    console.log('No data points available');
+                }
+                
+                // Update last update time
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = 
+                    `Last update: ${now.toLocaleTimeString()}`;
+            })
+            .catch(error => {
+                console.error('Error fetching chart data:', error);
+            })
+            .finally(() => {
+                loadingIndicator.classList.remove('active');
+            });
+    }
+
+    function changeChartType(type) {
+        // Update button styles
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        // Update current type and recreate chart
+        currentChartType = type;
+        createChart(type);
+    }
+
+    // Initialize charts
+    createChart('line');
+    updateStats();
+    
+    // If we have stats data, create the distribution chart
+    if (chartData.stats) {
+        createDistributionChart();
+    }
+
+    // Update chart data every 10 seconds
+    setInterval(updateChartData, UPDATE_INTERVAL);
+
+    // Initial update if needed
+    if (chartData.labels.length === 0) {
+        updateChartData();
+    }
+</script>
+{% endblock %} 

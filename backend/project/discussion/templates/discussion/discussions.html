@@ -1,0 +1,286 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Community Discussions - Smart City{% endblock %}
+
+{% block content %}
+<div class="discussions-container">
+    <div class="create-discussion">
+        <button class="btn btn-primary" onclick="showCreateDiscussionModal()">
+            <i class="ri-add-line"></i> Start New Discussion
+        </button>
+    </div>
+
+    <div class="discussions-list">
+        {% for discussion in discussions %}
+        <div class="discussion-card">
+            <div class="discussion-header">
+                <h3>{{ discussion.title }}</h3>
+                <span class="author">By {{ discussion.user.username }}</span>
+                <span class="date">{{ discussion.created_at|date:"F d, Y" }}</span>
+            </div>
+            <div class="discussion-content">
+                <p>{{ discussion.content }}</p>
+                {% if discussion.image %}
+                    <img src="{{ discussion.image.url }}" alt="Discussion image" class="discussion-image">
+                {% endif %}
+                {% if discussion.location_name %}
+                    <div class="location">
+                        <i class="ri-map-pin-line"></i> {{ discussion.location_name }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="discussion-actions">
+                <button class="btn btn-comment" onclick="showCommentModal({{ discussion.id }})">
+                    <i class="ri-chat-1-line"></i> Comment
+                </button>
+            </div>
+            <div class="comments-section" id="comments-{{ discussion.id }}">
+                {% for comment in discussion.comments.all %}
+                    <div class="comment">
+                        <strong>{{ comment.user.username }}</strong>
+                        <p>{{ comment.content }}</p>
+                        <span class="comment-date">{{ comment.created_at|date:"F d, Y" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Discussion Modal -->
+<div class="modal" id="createDiscussionModal">
+    <!-- Modal content here -->
+</div>
+
+<!-- Comment Modal -->
+<div class="modal" id="commentModal">
+    <!-- Modal content here -->
+</div>
+
+<script>
+function showCreateDiscussionModal() {
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal-overlay" onclick="closeModal('createDiscussionModal')">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>Create New Discussion</h3>
+                    <button class="close-btn" onclick="closeModal('createDiscussionModal')">&times;</button>
+                </div>
+                <form id="createDiscussionForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" name="title" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea id="content" name="content" required class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Image (optional)</label>
+                        <input type="file" id="image" name="image" accept="image/*" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <button type="button" onclick="getCurrentLocation()" class="btn btn-secondary">
+                            <i class="ri-map-pin-line"></i> Use Current Location
+                        </button>
+                        <input type="text" id="location_name" name="location_name" class="form-control" placeholder="Location name">
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Discussion</button>
+                </form>
+            </div>
+        </div>
+    `;
+
+    // Add modal to page
+    const modalContainer = document.getElementById('createDiscussionModal');
+    modalContainer.innerHTML = modalHtml;
+    modalContainer.style.display = 'block';
+
+    // Add form submit handler
+    document.getElementById('createDiscussionForm').addEventListener('submit', handleCreateDiscussion);
+}
+
+function showCommentModal(discussionId) {
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal-overlay" onclick="closeModal('commentModal')">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>Add Comment</h3>
+                    <button class="close-btn" onclick="closeModal('commentModal')">&times;</button>
+                </div>
+                <form id="commentForm">
+                    <div class="form-group">
+                        <label for="commentContent">Your Comment</label>
+                        <textarea id="commentContent" name="content" required class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Comment</button>
+                </form>
+            </div>
+        </div>
+    `;
+
+    // Add modal to page
+    const modalContainer = document.getElementById('commentModal');
+    modalContainer.innerHTML = modalHtml;
+    modalContainer.style.display = 'block';
+
+    // Add form submit handler
+    document.getElementById('commentForm').addEventListener('submit', (e) => handleAddComment(e, discussionId));
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+async function handleCreateDiscussion(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch("{% url 'create_discussion' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Error creating discussion: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating discussion');
+    }
+}
+
+async function handleAddComment(e, discussionId) {
+    e.preventDefault();
+    const content = document.getElementById('commentContent').value;
+
+    try {
+        const response = await fetch(`/discussions/${discussionId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ content })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Add comment to the page
+            const commentsSection = document.getElementById(`comments-${discussionId}`);
+            const commentHtml = `
+                <div class="comment">
+                    <strong>${data.username}</strong>
+                    <p>${data.content}</p>
+                    <span class="comment-date">${data.created_at}</span>
+                </div>
+            `;
+            commentsSection.insertAdjacentHTML('beforeend', commentHtml);
+            closeModal('commentModal');
+        } else {
+            alert('Error adding comment: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding comment');
+    }
+}
+
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+            // You could also reverse geocode here to get the location name
+            alert('Location captured successfully!');
+        }, (error) => {
+            console.error('Error getting location:', error);
+            alert('Error getting location. Please try again or enter location manually.');
+        });
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<!-- Add these styles -->
+<style>
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %} 

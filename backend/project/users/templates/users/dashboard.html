@@ -1,0 +1,936 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Dashboard - Smart City{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-container {
+        width: 100%;
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    /* Bento grid item positions */
+    .bento-item-1 { grid-column: span 2; grid-row: span 2; } /* Weather card */
+    .bento-item-2 { grid-column: span 1; } /* Air Quality */
+    .bento-item-3 { grid-column: span 1; } /* Traffic Status */
+    .bento-item-4 { grid-column: span 1; } /* Water Levels */
+    .bento-item-5 { grid-column: span 1; } /* Energy Usage */
+
+    .dashboard-card {
+        background: var(--card);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+        height: 100%;
+        width: 100%;
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+        font-family: var(--font-heading);
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #4f46e5;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        opacity: 0.9;
+    }
+
+    .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: #4f46e5;
+        line-height: 1;
+    }
+
+    .card-description {
+        color: #6b7280;
+        font-size: 0.9375rem;
+        opacity: 0.8;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .status-indicator::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+        50% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    .status-good { 
+        background-color: #10b981;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-warning { 
+        background-color: #f59e0b;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    }
+
+    .status-alert { 
+        background-color: #ef4444;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+
+    .graph-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    .graph-container {
+        background: var(--card);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        width: 100%;
+        backdrop-filter: blur(10px);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .graph-container:hover {
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    .graph-container .card-header {
+        flex-shrink: 0;
+        margin-bottom: 1rem;
+    }
+
+    .graph-container canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: calc(100% - 60px);
+    }
+
+    .metric-icon {
+        width: 24px;
+        height: 24px;
+        color: #4f46e5;
+        opacity: 0.8;
+    }
+
+    /* Weather card specific styles */
+    .weather-card {
+        background: linear-gradient(135deg, #9a96e7 0%, #9665eb 100%);
+        color: white;
+        border: none;
+    }
+
+    .weather-card .card-title,
+    .weather-card .card-description {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .weather-card .metric-icon {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .weather-card .card-value {
+        color: white;
+    }
+
+    .weather-content {
+        padding: 1rem;
+    }
+    
+    .current-weather {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .weather-icon {
+        width: 100px;
+        height: 100px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+    }
+    
+    .weather-info h2 {
+        margin: 0;
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+    }
+    
+    .weather-details {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+    }
+    
+    .hourly-forecast h4 {
+        margin-bottom: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .forecast-scroll {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .forecast-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .forecast-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.75rem;
+        border-radius: 1rem;
+        backdrop-filter: blur(5px);
+    }
+    
+    .forecast-item .time {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.5rem;
+    }
+    
+    .forecast-item img {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .forecast-item .temp {
+        font-weight: 600;
+        color: white;
+    }
+
+    @media (max-width: 1400px) {
+        .bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .bento-item-1 { grid-column: span 2; }
+        .bento-item-2, .bento-item-3, .bento-item-4, .bento-item-5 { grid-column: span 1; }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .bento-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .bento-item-1, .bento-item-2, .bento-item-3, .bento-item-4, .bento-item-5 {
+            grid-column: span 1;
+        }
+        
+        .graph-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .graph-container {
+            height: 300px;
+        }
+
+        .weather-details {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Ensure the main content area uses full width */
+    .main-content {
+        width: 100%;
+        padding: 0;
+    }
+
+    /* Location prompt styles */
+    .location-prompt {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .location-prompt-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
+
+    .location-prompt-icon {
+        font-size: 3rem;
+        color: var(--purple-600);
+        margin-bottom: 1rem;
+    }
+
+    .location-prompt-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--foreground);
+    }
+
+    .location-prompt-text {
+        margin-bottom: 1.5rem;
+        color: var(--secondary-foreground);
+    }
+
+    .location-prompt-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .btn-allow {
+        background: var(--purple-600);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .btn-allow:hover {
+        background: var(--purple-700);
+    }
+
+    .btn-deny {
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .btn-deny:hover {
+        background: var(--muted);
+    }
+
+    .weather-card {
+        grid-column: span 2;
+    }
+    
+    .weather-content {
+        padding: 1rem;
+    }
+    
+    .current-weather {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .weather-icon {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .weather-info h2 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    
+    .weather-details {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        color: var(--secondary-foreground);
+        font-size: 0.875rem;
+    }
+    
+    .hourly-forecast h4 {
+        margin-bottom: 1rem;
+        color: var(--secondary-foreground);
+    }
+    
+    .forecast-scroll {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .forecast-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 60px;
+    }
+    
+    .forecast-item .time {
+        font-size: 0.875rem;
+        color: var(--secondary-foreground);
+    }
+    
+    .forecast-item img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .forecast-item .temp {
+        font-weight: 500;
+    }
+    
+    .error-message {
+        color: #ef4444;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    [data-theme="dark"] {
+        --chart-grid: rgba(139, 92, 246, 0.1);
+        --chart-text: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-theme="dark"] .dashboard-card {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .dashboard-card:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .card-title {
+        color: rgba(139, 92, 246, 0.9);
+    }
+
+    [data-theme="dark"] .card-value {
+        color: rgba(139, 92, 246, 1);
+    }
+
+    [data-theme="dark"] .card-description {
+        color: var(--secondary-foreground);
+    }
+
+    [data-theme="dark"] .graph-container {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .graph-container:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    [data-theme="dark"] .weather-card {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.3) 100%);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .weather-card:hover {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(139, 92, 246, 0.35) 100%);
+    }
+</style>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Location Permission Prompt -->
+<div id="location-prompt" class="location-prompt" style="display: none;">
+    <div class="location-prompt-card">
+        <i class="ri-map-pin-line location-prompt-icon"></i>
+        <h2 class="location-prompt-title">Enable Location Services</h2>
+        <p class="location-prompt-text">
+            To provide you with personalized city updates and nearby incidents, we need your location. This helps us show you relevant information about your surroundings.
+        </p>
+        <div class="location-prompt-buttons">
+            <button id="allow-location" class="btn-allow">Allow Location Access</button>
+            <button id="deny-location" class="btn-deny">Not Now</button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-container">
+    <div class="bento-grid">
+        <div class="dashboard-card weather-card bento-item-1">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 15A5 5 0 1 1 16 15"></path>
+                        <path d="M12 2v2"></path>
+                        <path d="M12 20v2"></path>
+                        <path d="M20 12h2"></path>
+                        <path d="M2 12h2"></path>
+                    </svg>
+                    Weather
+                </h3>
+            </div>
+            {% if current_weather %}
+                <div class="weather-content">
+                    <div class="current-weather">
+                        <img src="https://openweathermap.org/img/wn/{{ current_weather.icon }}@2x.png" alt="Weather icon" class="weather-icon">
+                        <div class="weather-info">
+                            <h2>{{ current_weather.temp }}°C</h2>
+                            <p>{{ current_weather.description }}</p>
+                            <div class="weather-details">
+                                <span>Feels like: {{ current_weather.feels_like }}°C</span>
+                                <span>Humidity: {{ current_weather.humidity }}%</span>
+                                <span>Wind: {{ current_weather.wind_speed }} m/s</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hourly-forecast">
+                        <h4>24-Hour Forecast</h4>
+                        <div class="forecast-scroll">
+                            {% for item in forecast %}
+                                <div class="forecast-item">
+                                    <span class="time">{{ item.dt_txt|date:"H:i" }}</span>
+                                    <img src="https://openweathermap.org/img/wn/{{ item.weather.0.icon }}.png" alt="Weather icon">
+                                    <span class="temp">{{ item.main.temp|floatformat:0 }}°C</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="error-message">{{ error|default:"Unable to load weather data" }}</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-card bento-item-2">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18 17V9"></path>
+                        <path d="M13 17V5"></path>
+                        <path d="M8 17v-3"></path>
+                    </svg>
+                    Air Quality
+                </h3>
+                <span class="status-indicator status-good"></span>
+            </div>
+            <div class="card-value">45</div>
+            <div class="card-description">AQI (Good)</div>
+        </div>
+
+        <div class="dashboard-card bento-item-3">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                        <circle cx="7" cy="17" r="2"></circle>
+                        <path d="M9 17h6"></path>
+                        <circle cx="17" cy="17" r="2"></circle>
+                    </svg>
+                    Traffic Status
+                </h3>
+                <span class="status-indicator status-warning"></span>
+            </div>
+            <div class="card-value">Moderate</div>
+            <div class="card-description">Congestion Level</div>
+        </div>
+
+        <div class="dashboard-card bento-item-4">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                        <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+                    </svg>
+                    Water Levels
+                </h3>
+                <span class="status-indicator status-good"></span>
+            </div>
+            <div class="card-value">75%</div>
+            <div class="card-description">Reservoir Capacity</div>
+        </div>
+
+        <div class="dashboard-card bento-item-5">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                    Energy Usage
+                </h3>
+                <span class="status-indicator status-alert"></span>
+            </div>
+            <div class="card-value">85%</div>
+            <div class="card-description">Peak Load</div>
+        </div>
+    </div>
+
+    <div class="graph-grid">
+        <div class="graph-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18 17V9"></path>
+                        <path d="M13 17V5"></path>
+                        <path d="M8 17v-3"></path>
+                    </svg>
+                    Air Quality Trends
+                </h3>
+            </div>
+            <canvas id="airQualityChart"></canvas>
+        </div>
+
+        <div class="graph-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                        <circle cx="7" cy="17" r="2"></circle>
+                        <path d="M9 17h6"></path>
+                        <circle cx="17" cy="17" r="2"></circle>
+                    </svg>
+                    Traffic Flow
+                </h3>
+            </div>
+            <canvas id="trafficChart"></canvas>
+        </div>
+
+        <div class="graph-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                    Energy Consumption
+                </h3>
+            </div>
+            <canvas id="energyChart"></canvas>
+        </div>
+
+        <div class="graph-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg class="metric-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                        <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+                    </svg>
+                    Water Usage
+                </h3>
+            </div>
+            <canvas id="waterChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sample data for static graphs
+const last7Days = Array.from({length: 7}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toLocaleDateString('en-US', { weekday: 'short' });
+});
+
+// Update Chart.js defaults
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(226, 232, 240, 0.4)';
+Chart.defaults.font.family = 'Inter, sans-serif';
+Chart.defaults.font.size = 12;
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Show location prompt
+    const locationPrompt = document.getElementById('location-prompt');
+    const allowLocationBtn = document.getElementById('allow-location');
+    const denyLocationBtn = document.getElementById('deny-location');
+    
+    // Check if we already have location permission stored
+    const hasLocationPermission = localStorage.getItem('locationPermission');
+    
+    if (!hasLocationPermission) {
+        locationPrompt.style.display = 'flex';
+    } else if (hasLocationPermission === 'granted') {
+        // If permission was already granted, get location and save it
+        getUserLocation();
+    }
+    
+    // Handle location permission buttons
+    allowLocationBtn.addEventListener('click', function() {
+        locationPrompt.style.display = 'none';
+        localStorage.setItem('locationPermission', 'granted');
+        getUserLocation();
+    });
+    
+    denyLocationBtn.addEventListener('click', function() {
+        locationPrompt.style.display = 'none';
+        localStorage.setItem('locationPermission', 'denied');
+    });
+
+    // Function to get user location
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    
+                    // Save to localStorage for quick access
+                    localStorage.setItem('userLatitude', latitude);
+                    localStorage.setItem('userLongitude', longitude);
+                    
+                    // Send location to server
+                    updateUserLocation(latitude, longitude);
+                },
+                function(error) {
+                    console.error("Error getting location:", error);
+                }
+            );
+        } else {
+            console.error("Geolocation is not supported by this browser.");
+        }
+    }
+    
+    // Function to update user location on the server
+    function updateUserLocation(latitude, longitude) {
+        fetch('/update-location/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Location updated:', data);
+        })
+        .catch(error => {
+            console.error('Error updating location:', error);
+        });
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Chart initialization code
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                align: 'end',
+                labels: {
+                    boxWidth: 12,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    padding: 12,
+                    color: '#64748b'
+                }
+            }
+        },
+        layout: {
+            padding: {
+                top: 10,
+                right: 10,
+                bottom: 10,
+                left: 10
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(226, 232, 240, 0.4)',
+                    drawBorder: false
+                },
+                ticks: {
+                    padding: 10,
+                    color: '#64748b'
+                }
+            },
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false
+                },
+                ticks: {
+                    padding: 5,
+                    color: '#64748b'
+                }
+            }
+        }
+    };
+
+    // Air Quality Chart
+    const airQualityCtx = document.getElementById('airQualityChart').getContext('2d');
+    new Chart(airQualityCtx, {
+        type: 'line',
+        data: {
+            labels: last7Days,
+            datasets: [{
+                label: 'AQI',
+                data: [45, 52, 49, 60, 55, 48, 42],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Traffic Chart
+    const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+    new Chart(trafficCtx, {
+        type: 'bar',
+        data: {
+            labels: last7Days,
+            datasets: [{
+                label: 'Vehicles/Hour',
+                data: [850, 920, 890, 950, 1020, 780, 800],
+                backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                borderColor: '#8b5cf6',
+                borderWidth: 0,
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Energy Chart
+    const energyCtx = document.getElementById('energyChart').getContext('2d');
+    new Chart(energyCtx, {
+        type: 'line',
+        data: {
+            labels: last7Days,
+            datasets: [{
+                label: 'kW/h',
+                data: [120, 135, 125, 150, 145, 130, 140],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Water Usage Chart
+    const waterCtx = document.getElementById('waterChart').getContext('2d');
+    new Chart(waterCtx, {
+        type: 'line',
+        data: {
+            labels: last7Days,
+            datasets: [{
+                label: 'Gallons/min',
+                data: [2500, 2600, 2450, 2700, 2800, 2550, 2650],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
+            }]
+        },
+        options: chartOptions
+    });
+});
+</script>
+{% endblock %} 
