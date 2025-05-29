@@ -107,7 +107,7 @@ An integrated, web-based platform that brings real-time data, citizen feedback, 
 
 Watch our live demonstration video of the Smart City Dashboard in action:
 
-🔗 [Click here to view the demo](https://your-video-link.com)  
+🔗 [Click here to view the demo]([https://your-video-link.com](https://drive.google.com/drive/folders/1_HzzgEoUvJY96OsBoT08zIakFlks-Fb3?usp=drive_link))  
 (Add your video link once uploaded to YouTube, Google Drive, or another hosting platform.)
 
 ---
