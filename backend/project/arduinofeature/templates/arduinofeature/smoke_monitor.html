@@ -57,19 +57,19 @@
 
     .status.safe {
         background: rgba(46, 125, 50, 0.1);
-        color: #2e7d32;
+        color: #36923b;
         border: 1px solid rgba(46, 125, 50, 0.2);
     }
 
     .status.warning {
         background: rgba(239, 108, 0, 0.1);
-        color: #ef6c00;
+        color: #fb7304;
         border: 1px solid rgba(239, 108, 0, 0.2);
     }
 
     .status.danger {
         background: rgba(198, 40, 40, 0.1);
-        color: #c62828;
+        color: #c72626;
         border: 1px solid rgba(198, 40, 40, 0.2);
     }
 
@@ -166,7 +166,7 @@
                 console.error('Error fetching data:', error);
             })
             .finally(() => {
-                loadingIndicator.classList.remove('active'); // Hide loading indicator
+                loadingIndicator.classList.remove('active'); 
             });
     }
 

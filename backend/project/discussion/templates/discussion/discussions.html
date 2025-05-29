@@ -48,12 +48,12 @@
     </div>
 </div>
 
-<!-- Create Discussion Modal -->
+
 <div class="modal" id="createDiscussionModal">
     <!-- Modal content here -->
 </div>
 
-<!-- Comment Modal -->
+
 <div class="modal" id="commentModal">
     <!-- Modal content here -->
 </div>
@@ -130,7 +130,7 @@ function showCommentModal(discussionId) {
     modalContainer.innerHTML = modalHtml;
     modalContainer.style.display = 'block';
 
-    // Add form submit handler
+    
     document.getElementById('commentForm').addEventListener('submit', (e) => handleAddComment(e, discussionId));
 }
 
@@ -180,7 +180,7 @@ async function handleAddComment(e, discussionId) {
 
         const data = await response.json();
         if (data.success) {
-            // Add comment to the page
+            
             const commentsSection = document.getElementById(`comments-${discussionId}`);
             const commentHtml = `
                 <div class="comment">
