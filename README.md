@@ -14,9 +14,9 @@ An integrated, web-based platform that brings real-time data, citizen feedback, 
 - [APIs Used](#-apis-used)
 - [IoT Integration](#-iot-integration)
 - [Future Scope](#-future-scope)
-- [Screenshots](#-screenshots)
+- [Video Link](#-screenshots)
 - [Contributors](#-contributors)
-- [License](#-license)
+-
 
 ---
 
@@ -124,7 +124,7 @@ Watch our live demonstration video of the Smart City Dashboard in action:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/smart-city-dashboard.git
+git clone https://github.com/ankit935686/Hackvortex.git
 
 # Navigate to the project directory
 cd smart-city-dashboard
